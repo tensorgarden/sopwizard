@@ -59,7 +59,7 @@ export function reviewPage(id, sop, clarifications = []) {
     <h2>Steps</h2>
     <ol>${steps}
     </ol>
-    <p><a href="/sops/${id}">Visual guide</a> &middot; <a href="/sops/${id}/sop.md">Markdown</a></p>
+    <p><a href="/sops/${id}">Visual guide</a> &middot; <a href="/sops/${id}/sop.md">Markdown</a> &middot; <a href="/sops/${id}/sop.docx">Word</a></p>
     <script>
       async function submitAnswers() {
         const answers = [...document.querySelectorAll('.answer')]

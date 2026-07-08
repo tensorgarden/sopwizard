@@ -11,8 +11,9 @@ const recording = JSON.parse(await readFile(join(process.cwd(), 'samples', 'reco
 const { sop, clarifications } = run(recording, recording.context || {});
 const dir = await persist('sample', sop, clarifications);
 
-console.log(render(sop).markdown.content);
-console.log(`Wrote ${sop.steps.length} steps to ${dir}`);
+const outputs = await render(sop);
+console.log(outputs.markdown.content);
+console.log(`Wrote ${sop.steps.length} steps (md, docx, html) to ${dir}`);
 if (clarifications.length) {
   console.log(`\n${clarifications.length} question(s) for review:`);
   for (const c of clarifications) console.log(`  - ${c.text}`);

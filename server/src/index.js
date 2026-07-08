@@ -90,6 +90,7 @@ async function editSop(req, res, id, edit) {
 function contentType(file) {
   if (file.endsWith('.html')) return 'text/html; charset=utf-8';
   if (file.endsWith('.md')) return 'text/markdown; charset=utf-8';
+  if (file.endsWith('.docx')) return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
   if (file.endsWith('.json')) return 'application/json';
   return 'text/plain; charset=utf-8';
 }

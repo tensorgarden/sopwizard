@@ -1,5 +1,6 @@
 // Writes pipeline results to disk: one folder per SOP holding the structured
-// JSON, the Markdown master, the visual guide, and the review page.
+// JSON, the Markdown master, the Word document, the visual guide, and the
+// review page.
 
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -12,9 +13,10 @@ export async function persist(id, sop, clarifications = []) {
   const dir = join(DATA_DIR, id);
   await mkdir(dir, { recursive: true });
 
-  const outputs = render(sop);
+  const outputs = await render(sop);
   await writeFile(join(dir, 'sop.json'), JSON.stringify(sop, null, 2));
   await writeFile(join(dir, 'sop.md'), outputs.markdown.content);
+  await writeFile(join(dir, 'sop.docx'), outputs.docx.content);
   await writeFile(join(dir, 'index.html'), outputs.html.content);
   await writeFile(join(dir, 'review.html'), reviewPage(id, sop, clarifications));
 
