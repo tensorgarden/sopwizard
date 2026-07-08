@@ -2,7 +2,7 @@
 // ships the batch — with any context the user added — to the pipeline when
 // recording stops.
 
-const PIPELINE_URL = 'http://localhost:8787/recordings';
+const PIPELINE_BASE = 'http://localhost:8787';
 const CAPTURE_INTERVAL_MS = 400;
 
 let events = [];
@@ -48,12 +48,14 @@ async function flush() {
   events = [];
 
   try {
-    await fetch(PIPELINE_URL, {
+    const res = await fetch(`${PIPELINE_BASE}/recordings`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(payload),
     });
+    const result = await res.json();
     await chrome.storage.local.remove(['task', 'preNotes']);
+    if (result?.review) chrome.tabs.create({ url: `${PIPELINE_BASE}${result.review}` });
   } catch (err) {
     console.warn('SOPWizard: could not reach the pipeline', err);
   }
