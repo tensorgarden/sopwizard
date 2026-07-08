@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "SOPWizard Recorder",
+  "version": "0.0.1",
+  "description": "Record a browser workflow and turn it into a standard operating procedure.",
+  "permissions": ["activeTab", "tabs", "storage"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "SOPWizard"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

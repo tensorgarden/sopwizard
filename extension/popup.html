@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        font: 13px system-ui, sans-serif;
+        width: 220px;
+        margin: 0;
+        padding: 14px;
+      }
+      button {
+        width: 100%;
+        padding: 9px;
+        border: 0;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .start { background: #1f6feb; color: #fff; }
+      .stop { background: #cf222e; color: #fff; }
+      .status { margin-top: 10px; color: #57606a; }
+    </style>
+  </head>
+  <body>
+    <button id="toggle" class="start">Start recording</button>
+    <div class="status" id="status">Idle</div>
+    <script src="popup.js"></script>
+  </body>
+</html>
