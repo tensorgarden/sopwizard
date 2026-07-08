@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { run } from './pipeline.js';
@@ -20,6 +20,36 @@ function send(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
+async function serveIndex(res) {
+  let ids = [];
+  try {
+    const entries = await readdir(DATA_DIR, { withFileTypes: true });
+    ids = entries.filter((e) => e.isDirectory()).map((e) => e.name);
+  } catch {
+    // no SOPs generated yet
+  }
+
+  const list = ids.length
+    ? ids.map((id) => `<li><a href="/sops/${id}/review">${id}</a> &middot; <a href="/sops/${id}">guide</a></li>`).join('')
+    : '<li>No SOPs yet — record one with the extension, or run <code>npm run demo</code>.</li>';
+
+  const html = `<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><title>SOPWizard</title>
+    <style>body{font:15px/1.5 system-ui,sans-serif;max-width:640px;margin:48px auto;padding:0 20px;color:#1f2328}a{color:#1f6feb}code{background:#f6f8fa;padding:1px 5px;border-radius:4px}</style>
+  </head>
+  <body>
+    <h1>SOPWizard</h1>
+    <p>Pipeline running on :8787.</p>
+    <h2>SOPs</h2>
+    <ul>${list}</ul>
+  </body>
+</html>
+`;
+  res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+  res.end(html);
+}
+
 async function serveFile(res, id, file) {
   try {
     const content = await readFile(join(DATA_DIR, id, file));
@@ -33,6 +63,10 @@ async function serveFile(res, id, file) {
 const server = createServer(async (req, res) => {
   const { pathname } = new URL(req.url, 'http://localhost');
   const parts = pathname.split('/').filter(Boolean);
+
+  if (req.method === 'GET' && pathname === '/') {
+    return serveIndex(res);
+  }
 
   if (req.method === 'GET' && pathname === '/health') {
     return send(res, 200, { ok: true });
