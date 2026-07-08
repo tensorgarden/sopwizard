@@ -5,9 +5,28 @@
     <style>
       body {
         font: 13px system-ui, sans-serif;
-        width: 220px;
+        width: 260px;
         margin: 0;
         padding: 14px;
+      }
+      label {
+        display: block;
+        margin: 0 0 4px;
+        color: #57606a;
+      }
+      input,
+      textarea {
+        width: 100%;
+        padding: 6px 8px;
+        margin-bottom: 10px;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        font: inherit;
+        box-sizing: border-box;
+      }
+      textarea {
+        min-height: 52px;
+        resize: vertical;
       }
       button {
         width: 100%;
@@ -23,8 +42,15 @@
     </style>
   </head>
   <body>
+    <label for="task">Task</label>
+    <input id="task" placeholder="e.g. Create a new client record" />
+
+    <label for="notes">What should someone know? (optional)</label>
+    <textarea id="notes" placeholder="Systems, rules, common exceptions…"></textarea>
+
     <button id="toggle" class="start">Start recording</button>
     <div class="status" id="status">Idle</div>
+
     <script src="popup.js"></script>
   </body>
 </html>

@@ -1,5 +1,6 @@
 // Collects events for the active recording, attaches a keyframe to each, and
-// ships the batch to the pipeline when recording stops.
+// ships the batch — with any context the user added — to the pipeline when
+// recording stops.
 
 const PIPELINE_URL = 'http://localhost:8787/recordings';
 const CAPTURE_INTERVAL_MS = 400;
@@ -23,6 +24,11 @@ async function keyframe() {
   }
 }
 
+async function context() {
+  const { task, preNotes } = await chrome.storage.local.get(['task', 'preNotes']);
+  return { task: task || '', pre: preNotes || '' };
+}
+
 async function setRecording(on) {
   await chrome.storage.local.set({ recording: on });
   if (on) events = [];
@@ -38,7 +44,7 @@ async function setRecording(on) {
 async function flush() {
   if (events.length === 0) return;
 
-  const payload = { capturedAt: Date.now(), events };
+  const payload = { capturedAt: Date.now(), context: await context(), events };
   events = [];
 
   try {
@@ -47,6 +53,7 @@ async function flush() {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(payload),
     });
+    await chrome.storage.local.remove(['task', 'preNotes']);
   } catch (err) {
     console.warn('SOPWizard: could not reach the pipeline', err);
   }

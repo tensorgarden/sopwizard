@@ -41,7 +41,7 @@ npm run demo
 npm start   # listens on :8787
 ```
 
-Generated SOPs are written under `server/data/sops/<id>/` as `sop.md`, `index.html`, and `sop.json`.
+Generated SOPs are written under `server/data/sops/<id>/` as `sop.md`, `index.html`, and `sop.json`. Posting a recording to `POST /recordings` returns a `review` link (`/sops/<id>/review`) where you answer the open questions and correct any step in plain language — edits apply only to the step they name.
 
 **Extension** — open `chrome://extensions`, enable Developer mode, choose *Load unpacked*, and select the `extension/` folder. With the server running, record a workflow and stop to generate the SOP.
 

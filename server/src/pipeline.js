@@ -1,17 +1,13 @@
-// Runs a recording through the pipeline: segment → draft → export.
+// Runs a recording through the pipeline: segment → draft → review.
+// Rendering and persistence happen after, so edited SOPs re-render the same way.
 
 import { segment } from './segment.js';
 import { draft } from './draft.js';
-import { exporters } from './export/index.js';
+import { review } from './review.js';
 
 export function run(recording, context = {}) {
   const steps = segment(recording);
   const sop = draft(recording, steps, context);
-
-  const outputs = {};
-  for (const [name, exporter] of Object.entries(exporters)) {
-    outputs[name] = { ext: exporter.ext, content: exporter.render(sop) };
-  }
-
-  return { sop, outputs };
+  const clarifications = review(sop);
+  return { sop, clarifications };
 }
