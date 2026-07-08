@@ -1,0 +1,40 @@
+{
+  "capturedAt": 0,
+  "context": {
+    "task": "Create a new client record",
+    "pre": "Use this to add a client after an intake call.",
+    "post": "If the email already exists, the form shows a duplicate warning — cancel and search for the existing client instead."
+  },
+  "events": [
+    {
+      "seq": 0,
+      "type": "click",
+      "url": "https://app.example.com/clients",
+      "target": { "tag": "button", "role": "button", "name": "New client", "selector": "button#new-client" }
+    },
+    {
+      "seq": 1,
+      "type": "change",
+      "url": "https://app.example.com/clients/new",
+      "target": { "tag": "input", "role": null, "name": "Full name", "selector": "input#name" }
+    },
+    {
+      "seq": 2,
+      "type": "change",
+      "url": "https://app.example.com/clients/new",
+      "target": { "tag": "input", "role": null, "name": "Email", "selector": "input#email" }
+    },
+    {
+      "seq": 3,
+      "type": "change",
+      "url": "https://app.example.com/clients/new",
+      "target": { "tag": "select", "role": null, "name": "Account type", "selector": "select#type" }
+    },
+    {
+      "seq": 4,
+      "type": "submit",
+      "url": "https://app.example.com/clients/new",
+      "target": { "tag": "form", "role": null, "name": "Save client", "selector": "form#client-form" }
+    }
+  ]
+}
