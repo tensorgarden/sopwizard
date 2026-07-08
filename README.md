@@ -45,6 +45,8 @@ Generated SOPs are written under `server/data/sops/<id>/` as `sop.md`, `sop.docx
 
 **Extension** — open `chrome://extensions`, enable Developer mode, choose *Load unpacked*, and select the `extension/` folder. With the server running, record a workflow and stop to generate the SOP.
 
+To share it, run `npm run pack:extension` to build `dist/sopwizard-extension.zip` (also downloadable from a running server at `/extension.zip`); unzip and load it unpacked.
+
 ## Status
 
 Early development.

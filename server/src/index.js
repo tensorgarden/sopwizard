@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { run } from './pipeline.js';
 import { review } from './review.js';
@@ -8,6 +9,7 @@ import { applyAnswers, applyCorrection } from './revise.js';
 import { persist, load, DATA_DIR } from './store.js';
 
 const PORT = process.env.PORT || 8787;
+const EXTENSION_ZIP = fileURLToPath(new URL('../../dist/sopwizard-extension.zip', import.meta.url));
 
 async function readJson(req) {
   const chunks = [];
@@ -41,6 +43,7 @@ async function serveIndex(res) {
   <body>
     <h1>SOPWizard</h1>
     <p>Pipeline running on :8787.</p>
+    <p><a href="/extension.zip">Download the Chrome extension (.zip)</a> — unzip, then load it unpacked at <code>chrome://extensions</code>.</p>
     <h2>SOPs</h2>
     <ul>${list}</ul>
   </body>
@@ -70,6 +73,19 @@ const server = createServer(async (req, res) => {
 
   if (req.method === 'GET' && pathname === '/health') {
     return send(res, 200, { ok: true });
+  }
+
+  if (req.method === 'GET' && pathname === '/extension.zip') {
+    try {
+      const buf = await readFile(EXTENSION_ZIP);
+      res.writeHead(200, {
+        'content-type': 'application/zip',
+        'content-disposition': 'attachment; filename="sopwizard-extension.zip"',
+      });
+      return res.end(buf);
+    } catch {
+      return send(res, 404, { error: 'not built — run `npm run pack:extension` from the repo root' });
+    }
   }
 
   if (req.method === 'POST' && pathname === '/recordings') {
