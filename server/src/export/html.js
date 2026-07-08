@@ -1,5 +1,6 @@
 // Renders a SOP to a self-contained visual guide: numbered steps with their
-// keyframes inlined, so a single .html file is shareable and printable to PDF.
+// keyframes inlined and the acted-on element highlighted, so a single .html
+// file is shareable and printable to PDF.
 
 export function toHtml(sop) {
   const steps = sop.steps
@@ -8,7 +9,7 @@ export function toHtml(sop) {
     <li>
       <h3>${escape(step.title)}</h3>
       <p>${escape(step.detail)}</p>
-      ${step.keyframe ? `<img src="${escape(step.keyframe)}" alt="Step ${step.index}" />` : ''}
+      ${shot(step)}
     </li>`
     )
     .join('');
@@ -28,7 +29,9 @@ export function toHtml(sop) {
       li::before { counter-increment: step; content: counter(step); position: absolute; left: -15px; top: 0; width: 26px; height: 26px; border-radius: 50%; background: #1f6feb; color: #fff; font-size: 13px; font-weight: 600; display: grid; place-items: center; }
       h3 { margin: 0 0 4px; font-size: 16px; }
       p { margin: 0 0 10px; }
-      img { max-width: 100%; border: 1px solid #d0d7de; border-radius: 6px; }
+      .shot { position: relative; display: inline-block; max-width: 100%; }
+      .shot img { display: block; max-width: 100%; border: 1px solid #d0d7de; border-radius: 6px; }
+      .hl { position: absolute; border: 2px solid #1f6feb; border-radius: 3px; box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.25); pointer-events: none; }
     </style>
   </head>
   <body>
@@ -39,6 +42,20 @@ export function toHtml(sop) {
   </body>
 </html>
 `;
+}
+
+function shot(step) {
+  if (!step.keyframe) return '';
+  return `<div class="shot">${highlight(step)}<img src="${escape(step.keyframe)}" alt="Step ${step.index}" /></div>`;
+}
+
+function highlight(step) {
+  const rect = step.target?.rect;
+  const view = step.viewport;
+  if (!rect || !view?.w || !view?.h) return '';
+
+  const pct = (value, total) => Math.max(0, Math.min(100, (value / total) * 100)).toFixed(2);
+  return `<span class="hl" style="left:${pct(rect.x, view.w)}%;top:${pct(rect.y, view.h)}%;width:${pct(rect.w, view.w)}%;height:${pct(rect.h, view.h)}%"></span>`;
 }
 
 function escape(value) {

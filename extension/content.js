@@ -72,6 +72,7 @@ function capture(type, event) {
       type,
       url: location.href,
       at: Date.now(),
+      viewport: { w: window.innerWidth, h: window.innerHeight },
       target: describeTarget(event.target),
     },
   });

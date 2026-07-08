@@ -20,6 +20,7 @@ export function segment(recording) {
       target: event.target || null,
       url: event.url,
       at: event.at,
+      viewport: event.viewport || null,
       keyframe: event.keyframe || null,
     });
   }
