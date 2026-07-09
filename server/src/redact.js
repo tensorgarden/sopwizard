@@ -2,8 +2,8 @@
 //
 // Recordings only ever capture element labels and page URLs — never typed
 // values — but labels can still surface personal data (a row titled with a
-// client's name and policy number, for example). Anything leaving the local
-// pipeline passes through here first; this is a hard gate, not a model
+// customer's name and account number, for example). Anything leaving the
+// local pipeline passes through here first; this is a hard gate, not a model
 // behavior.
 
 const PATTERNS = [
