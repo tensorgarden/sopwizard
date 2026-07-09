@@ -1,3 +1,4 @@
+import './env.js';
 import { createServer } from 'node:http';
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -9,6 +10,7 @@ import { review } from './review.js';
 import { applyAnswers, applyCorrection, approve } from './revise.js';
 import { persist, load, DATA_DIR } from './store.js';
 import { meter, record } from './usage.js';
+import { syncSop, syncError, syncEnabled } from './sync.js';
 import { landingPage } from './export/landing.js';
 import { practicePage } from './export/practice.js';
 
@@ -90,6 +92,7 @@ const server = createServer(async (req, res) => {
       const id = randomUUID();
       await persist(id, sop, clarifications);
       await meter(id, sop);
+      void syncSop(id, sop);
       return send(res, 201, {
         id,
         steps: sop.steps.length,
@@ -165,8 +168,10 @@ async function editSop(req, res, id, edit) {
     await edit(sop, body);
     const clarifications = review(sop);
     await persist(id, sop, clarifications);
+    void syncSop(id, sop);
     send(res, 200, { sop, clarifications });
   } catch (err) {
+    void syncError(err.message, { path: req.url });
     send(res, 400, { error: err.message });
   }
 }
@@ -208,4 +213,5 @@ server.requestTimeout = 0;
 server.listen(PORT, '127.0.0.1', () => {
   execFile('mkdir', ['-p', join(ROOT, 'dist')], () => packExtension());
   console.log(`SOPWizard running — open http://localhost:${PORT}`);
+  console.log(syncEnabled() ? 'cloud sync: on' : 'cloud sync: off (set SYNC_* in server/.env to enable)');
 });

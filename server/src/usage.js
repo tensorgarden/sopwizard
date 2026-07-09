@@ -3,6 +3,7 @@
 
 import { mkdir, appendFile, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { syncEvent } from './sync.js';
 
 const FILE = join(process.cwd(), 'data', 'usage.jsonl');
 
@@ -22,6 +23,7 @@ export async function record(kind, data = {}) {
   const entry = { at: Date.now(), kind, ...data };
   await mkdir(join(process.cwd(), 'data'), { recursive: true });
   await appendFile(FILE, JSON.stringify(entry) + '\n');
+  void syncEvent(kind, entry);
   return entry;
 }
 
