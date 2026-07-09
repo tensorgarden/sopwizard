@@ -35,11 +35,17 @@
       }
       .start { background: var(--accent); }
       .stop { background: var(--red); }
-      .status { display: flex; align-items: center; gap: 7px; margin-top: 11px; color: var(--muted); }
-      .status .led { width: 7px; height: 7px; border-radius: 50%; background: #c6cbd2; }
+      .status { display: flex; align-items: flex-start; gap: 7px; margin-top: 11px; color: var(--muted); }
+      .status .led { width: 7px; height: 7px; border-radius: 50%; background: #c6cbd2; flex: none; margin-top: 5px; }
       .status.live .led { background: var(--red); animation: pulse 1.2s infinite; }
       .status.live { color: var(--red); font-weight: 600; }
+      .status.ok .led { background: #11734f; }
+      .status.ok { color: #11734f; font-weight: 600; }
+      .status.warn .led { background: #9a6b1f; }
+      .status.warn { color: #9a6b1f; }
       @keyframes pulse { 50% { opacity: .35; } }
+      #retry { margin-top: 10px; background: #11734f; }
+      [hidden] { display: none !important; }
     </style>
   </head>
   <body>
@@ -52,6 +58,7 @@
     <textarea id="notes" placeholder="Systems, rules, common exceptions…"></textarea>
 
     <button id="toggle" class="start">Start recording</button>
+    <button id="retry" hidden>Send last recording</button>
     <div class="status" id="status"><span class="led"></span><span id="statusText">Idle</span></div>
 
     <script src="popup.js"></script>

@@ -51,12 +51,13 @@ async function setRecording(on) {
     chrome.tabs.sendMessage(tab.id, { kind: 'set-recording', on }).catch(() => {});
   }
 
-  if (!on) await enqueue(flush);
+  if (on) return { status: 'recording' };
+  return enqueue(flush);
 }
 
 async function flush() {
   const { events = [], task, preNotes } = await chrome.storage.local.get(['events', 'task', 'preNotes']);
-  if (events.length === 0) return;
+  if (events.length === 0) return { status: 'empty' };
 
   const payload = {
     capturedAt: Date.now(),
@@ -73,8 +74,10 @@ async function flush() {
     const result = await res.json();
     await chrome.storage.local.remove(['events', 'task', 'preNotes']);
     if (result?.review) chrome.tabs.create({ url: `${PIPELINE_BASE}${result.review}` });
-  } catch (err) {
-    console.warn('SOPWizard: could not reach the pipeline — the recording is kept locally', err);
+    return { status: 'sent', steps: events.length };
+  } catch {
+    // Keep the events so the recording can be sent once the server is up.
+    return { status: 'offline', steps: events.length };
   }
 }
 
@@ -84,7 +87,11 @@ chrome.runtime.onMessage.addListener((msg, _sender, respond) => {
     return;
   }
   if (msg.kind === 'toggle') {
-    setRecording(msg.on).then(() => respond({ ok: true }));
+    setRecording(msg.on).then((outcome) => respond(outcome ?? { status: 'ok' }));
+    return true;
+  }
+  if (msg.kind === 'retry') {
+    enqueue(flush).then((outcome) => respond(outcome));
     return true;
   }
 });
