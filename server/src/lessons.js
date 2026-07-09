@@ -7,6 +7,7 @@
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { redactText } from './redact.js';
 
 const FILE = join(process.cwd(), 'data', 'lessons.json');
 
@@ -22,6 +23,7 @@ export async function addLesson(lesson) {
   const lessons = await loadLessons();
   lessons.push({
     ...lesson,
+    rule: redactText(lesson.rule),
     at: Date.now(),
   });
   await mkdir(join(process.cwd(), 'data'), { recursive: true });

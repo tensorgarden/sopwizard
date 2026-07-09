@@ -55,6 +55,7 @@ export function landingPage(sops = []) {
       <p>Record yourself doing any browser workflow. SOPWizard watches the steps, writes the procedure, asks about anything unclear, and gives you a polished guide your whole team can follow.</p>
       <div class="actions">
         <a class="btn" href="/extension.zip">Download the Chrome extension</a>
+        <a class="btn ghost" href="/practice">Try it on the practice page</a>
         <a class="btn ghost" href="#install">How to install</a>
       </div>
     </div>
@@ -72,7 +73,8 @@ export function landingPage(sops = []) {
         <li><a href="/extension.zip">Download the extension</a> and unzip it.</li>
         <li>Open <code>chrome://extensions</code>, turn on <strong>Developer mode</strong> (top right).</li>
         <li>Click <strong>Load unpacked</strong> and choose the unzipped <code>extension</code> folder.</li>
-        <li>Pin SOPWizard to your toolbar, open the site you work in, and hit <strong>Start recording</strong>.</li>
+        <li>Pin SOPWizard to your toolbar, open the site you work in (refresh it once after installing), and hit <strong>Start recording</strong>.</li>
+        <li>New here? Do your first run on the <a href="/practice">practice page</a> — a small sample app made for recording.</li>
       </ol>
     </div>
 

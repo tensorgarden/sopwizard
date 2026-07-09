@@ -14,7 +14,7 @@ export const theme = `
     --accent-soft: #eaf0fc;
     --approve: #11734f;
     --approve-soft: #e7f4ee;
-    --amber: #9a6b1f;
+    --amber: #8a5f1b;
     --amber-soft: #fdf3e0;
     --shadow: 0 1px 2px rgba(23, 32, 46, 0.05), 0 12px 32px rgba(23, 32, 46, 0.07);
     --serif: Charter, Georgia, Cambria, "Times New Roman", serif;
@@ -46,6 +46,7 @@ export const theme = `
 
   .doc-title { font: 600 34px/1.2 var(--serif); letter-spacing: -0.01em; margin: 0 0 10px; }
   .doc-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; color: var(--muted); font-size: 13.5px; margin-bottom: 8px; }
+  .doc-meta span { min-width: 0; overflow-wrap: anywhere; }
   .doc-meta .sep { color: var(--line); }
   .intro { font: 400 17px/1.65 var(--serif); color: #333e4e; max-width: 62ch; margin: 18px 0 0; }
 
@@ -71,8 +72,8 @@ export const theme = `
   }
   .step:last-child::after { display: none; }
   .step h3 { margin: 4px 0 6px; font: 600 19px/1.35 var(--sans); letter-spacing: -0.005em; }
-  .step .detail { margin: 0 0 14px; color: #3b4554; max-width: 60ch; }
-  .step .evidence { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; font: 500 11.5px var(--mono); color: var(--faint); background: #f0eee7; padding: 2px 8px; border-radius: 5px; vertical-align: 2px; }
+  .step .detail { margin: 0 0 14px; color: #3b4554; max-width: 60ch; overflow-wrap: anywhere; }
+  .step .evidence { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; font: 500 11.5px var(--mono); color: var(--muted); background: #f0eee7; padding: 2px 8px; border-radius: 5px; vertical-align: 2px; }
   .step .edited-flag { margin-left: 8px; font-size: 12px; color: var(--approve); font-weight: 600; }
 
   .shot { position: relative; display: block; max-width: 100%; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--line); }
@@ -99,7 +100,7 @@ export const theme = `
     width: 100%; padding: 9px 12px; border: 1px solid var(--line); border-radius: 9px;
     font: 14.5px/1.5 var(--sans); color: var(--ink); background: #fff;
   }
-  input:focus, textarea:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+  input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
 
   @media print {
     body { background: #fff; }
@@ -107,6 +108,7 @@ export const theme = `
     .masthead, .footer .actions, button { display: none !important; }
     .shot { box-shadow: none; }
     .step { break-inside: avoid; }
+    .step::before, .badge, .how .n { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
 `;
 

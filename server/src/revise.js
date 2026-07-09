@@ -2,16 +2,30 @@
 // only the parts they name, leaving the rest of the SOP untouched.
 //
 // A correction marked as applying to future workflows also becomes a durable
-// lesson, loaded into context the next time a similar SOP is drafted.
+// lesson, loaded into context the next time a similar SOP is drafted. Editing
+// an approved SOP demotes it to a draft — approval means "reviewed as-is".
 
 import { addLesson } from './lessons.js';
+import { redactText } from './redact.js';
+
+function demoteIfApproved(sop) {
+  if (sop.status === 'approved') {
+    sop.status = 'candidate';
+    delete sop.approvedAt;
+  }
+}
 
 export function applyAnswers(sop, answers = []) {
   for (const answer of answers) {
-    const text = (answer.text || '').trim();
+    const text = redactText((answer.text || '').trim());
     if (!text) continue;
+    demoteIfApproved(sop);
 
     if (answer.stepIndex == null) {
+      const q = (sop.suggestedQuestions || []).find(
+        (s) => s.stepIndex == null && s.text === answer.question && !s.answered
+      );
+      if (q) q.answered = true;
       sop.context.post = sop.context.post ? `${sop.context.post}\n\n${text}` : text;
       continue;
     }
@@ -28,11 +42,14 @@ export function applyAnswers(sop, answers = []) {
 export async function applyCorrection(sop, correction) {
   const step = sop.steps.find((s) => s.index === correction.stepIndex);
   if (!step) return sop;
+  demoteIfApproved(sop);
 
   const before = { title: step.title, detail: step.detail };
+  const title = redactText(correction.title?.trim());
+  const detail = redactText(correction.detail?.trim());
 
-  if (correction.title?.trim()) step.title = correction.title.trim();
-  if (correction.detail?.trim()) step.detail = correction.detail.trim();
+  if (title) step.title = title;
+  if (detail) step.detail = detail;
   step.corrected = true;
 
   if (correction.scope === 'future') {

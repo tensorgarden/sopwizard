@@ -9,8 +9,10 @@ import { review } from './review.js';
 import { applyAnswers, applyCorrection, approve } from './revise.js';
 import { persist, load, DATA_DIR } from './store.js';
 import { landingPage } from './export/landing.js';
+import { practicePage } from './export/practice.js';
 
 const PORT = process.env.PORT || 8787;
+const SOP_FILES = new Set(['index.html', 'review.html', 'sop.md', 'sop.docx']);
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const EXTENSION_ZIP = join(ROOT, 'dist', 'sopwizard-extension.zip');
 
@@ -30,12 +32,39 @@ function sendHtml(res, html) {
   res.end(html);
 }
 
+// This server binds to loopback and holds workflow recordings, so requests
+// initiated by other websites in the browser are rejected: state changes must
+// come from the extension or our own pages, and the Host header must be a
+// local one (which also blocks DNS-rebinding tricks).
+function requestAllowed(req) {
+  const host = (req.headers.host || '').split(':')[0];
+  if (!['localhost', '127.0.0.1', '[::1]'].includes(host)) return false;
+  if (req.method === 'GET') return true;
+
+  const origin = req.headers.origin;
+  if (!origin) return true; // extension service worker and CLI clients
+  try {
+    const { protocol, hostname } = new URL(origin);
+    return protocol === 'chrome-extension:' || ['localhost', '127.0.0.1', '[::1]'].includes(hostname);
+  } catch {
+    return false;
+  }
+}
+
 const server = createServer(async (req, res) => {
+  if (!requestAllowed(req)) {
+    return send(res, 403, { error: 'forbidden' });
+  }
+
   const { pathname } = new URL(req.url, 'http://localhost');
   const parts = pathname.split('/').filter(Boolean);
 
   if (req.method === 'GET' && pathname === '/') {
     return sendHtml(res, landingPage(await listSops()));
+  }
+
+  if (req.method === 'GET' && pathname === '/practice') {
+    return sendHtml(res, practicePage());
   }
 
   if (req.method === 'GET' && pathname === '/health') {
@@ -134,6 +163,11 @@ async function editSop(req, res, id, edit) {
 }
 
 async function serveFile(res, id, file) {
+  // Ids are UUIDs and only rendered artifacts are served — the raw sop.json
+  // (which carries the full recording) stays on disk.
+  if (!/^[\w-]{1,64}$/.test(id) || !SOP_FILES.has(file)) {
+    return send(res, 404, { error: 'not found' });
+  }
   try {
     const content = await readFile(join(DATA_DIR, id, file));
     res.writeHead(200, { 'content-type': contentType(file) });
@@ -157,7 +191,10 @@ function packExtension() {
   });
 }
 
-server.listen(PORT, () => {
+// Long recordings upload large batches of screenshots; never cut them off.
+server.requestTimeout = 0;
+
+server.listen(PORT, '127.0.0.1', () => {
   execFile('mkdir', ['-p', join(ROOT, 'dist')], () => packExtension());
   console.log(`SOPWizard running — open http://localhost:${PORT}`);
 });

@@ -84,9 +84,27 @@ const handlers = {
   submit: (e) => capture('submit', e),
 };
 
+let indicator = null;
+
+function showIndicator(on) {
+  if (on && !indicator) {
+    indicator = document.createElement('div');
+    indicator.textContent = 'REC · SOPWizard is capturing this page';
+    indicator.style.cssText =
+      'position:fixed;top:10px;right:10px;z-index:2147483647;background:#b3362f;color:#fff;' +
+      'font:600 12px/1 -apple-system,BlinkMacSystemFont,sans-serif;padding:6px 12px;' +
+      'border-radius:999px;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.25)';
+    document.documentElement.appendChild(indicator);
+  } else if (!on && indicator) {
+    indicator.remove();
+    indicator = null;
+  }
+}
+
 function setRecording(on) {
   if (on === recording) return;
   recording = on;
+  showIndicator(on);
   for (const [type, handler] of Object.entries(handlers)) {
     if (on) document.addEventListener(type, handler, true);
     else document.removeEventListener(type, handler, true);
@@ -95,6 +113,13 @@ function setRecording(on) {
 
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.kind === 'set-recording') setRecording(msg.on);
+});
+
+// Storage is the source of truth: this arms tabs that were already open when
+// recording started, and disarms every tab when it stops — not just the one
+// that happened to be active.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && changes.recording) setRecording(Boolean(changes.recording.newValue));
 });
 
 chrome.storage.local.get('recording').then(({ recording: on }) => setRecording(Boolean(on)));

@@ -1,7 +1,8 @@
 // The review surface: answer open questions, correct any step in plain
 // language, and approve the SOP when it's right. Corrections only touch the
 // step they name; a correction can also be marked as applying to future
-// workflows, which turns it into a durable lesson.
+// workflows, which turns it into a durable lesson. Once approved, the page
+// goes read-only — editing again reopens the draft.
 
 import { shell, masthead } from './theme.js';
 import { escapeHtml as esc, mmss, hostOf } from './format.js';
@@ -23,15 +24,21 @@ const css = `
   .approve-bar { position: sticky; bottom: 0; margin-top: 40px; padding: 14px 18px; background: rgba(255,255,255,.92); backdrop-filter: blur(8px); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); display: flex; align-items: center; justify-content: space-between; gap: 14px; }
   .approve-bar .status-note { font-size: 13.5px; color: var(--muted); }
   .thumb { max-width: 420px; }
+  .feedback { font-size: 13px; font-weight: 600; margin-top: 6px; }
+  .feedback.ok { color: var(--approve); }
+  .feedback.err { color: #b3362f; }
+  button:disabled { opacity: .55; cursor: default; }
 `;
 
 export function reviewPage(id, sop, clarifications = []) {
+  const approved = sop.status === 'approved';
+
   const questions = clarifications
     .map(
-      (c) => `
+      (c, i) => `
         <div class="q">
-          <label>${esc(c.text)}</label>
-          <input class="answer" data-step="${c.stepIndex == null ? '' : c.stepIndex}" placeholder="Type your answer…" />
+          <label for="answer-${i}">${esc(c.text)}</label>
+          <input id="answer-${i}" class="answer" data-step="${c.stepIndex == null ? '' : c.stepIndex}" data-q="${esc(c.text)}" placeholder="Type your answer…" />
         </div>`
     )
     .join('');
@@ -43,25 +50,10 @@ export function reviewPage(id, sop, clarifications = []) {
         <h3>${esc(step.title)}${mmss(step.t) ? `<span class="evidence">▸ ${mmss(step.t)}</span>` : ''}${step.corrected ? '<span class="edited-flag">edited</span>' : ''}</h3>
         <p class="detail">${esc(step.detail)}</p>
         ${step.keyframe ? `<figure class="shot thumb" style="margin:0">${highlight(step)}<img src="${esc(step.keyframe)}" alt="Step ${step.index}" loading="lazy" /></figure>` : ''}
-        <details class="correct">
-          <summary>Not quite right? Correct this step</summary>
-          <div class="correct-body">
-            <span class="label">Step title</span>
-            <input class="c-title" value="${esc(step.title)}" />
-            <span class="label">What should it say?</span>
-            <textarea class="c-detail">${esc(step.detail)}</textarea>
-            <div class="scope">
-              <label><input type="radio" name="scope-${step.index}" value="this" checked /> Just this SOP</label>
-              <label><input type="radio" name="scope-${step.index}" value="future" /> All future workflows like this</label>
-            </div>
-            <div><button type="button" onclick="correct(${step.index}, this)">Save correction</button></div>
-          </div>
-        </details>
+        ${approved ? '' : correctionPanel(step)}
       </li>`
     )
     .join('');
-
-  const approved = sop.status === 'approved';
 
   const body = `
     ${masthead(sop.source.url ? `Recorded in ${esc(hostOf(sop.source.url))}` : '')}
@@ -69,39 +61,86 @@ export function reviewPage(id, sop, clarifications = []) {
     <h1 class="doc-title">${esc(sop.title)}</h1>
     <div class="doc-meta"><span>${sop.steps.length} steps</span><span class="sep">·</span><a href="/sops/${id}">Visual guide</a><span class="sep">·</span><a href="/sops/${id}/sop.md">Markdown</a><span class="sep">·</span><a href="/sops/${id}/sop.docx">Word</a></div>
     ${sop.intro ? `<p class="intro">${esc(sop.intro)}</p>` : ''}
-    ${clarifications.length ? `<section class="clarify"><h2>A few questions before this is finished</h2><p class="hint">Answers are folded into the exact step they belong to — nothing else is touched.</p>${questions}<button type="button" onclick="submitAnswers()">Save answers</button></section>` : ''}
+    ${!approved && clarifications.length ? `<section class="clarify"><h2>A few questions before this is finished</h2><p class="hint">Answers are folded into the exact step they belong to — nothing else is touched.</p>${questions}<button type="button" onclick="submitAnswers(this)">Save answers</button><div class="feedback" id="answers-feedback"></div></section>` : ''}
     <ol class="steps">${steps}
     </ol>
     ${sop.context.post ? `<div class="notes"><h2>Notes &amp; exceptions</h2><p>${esc(sop.context.post)}</p></div>` : ''}
     <div class="approve-bar">
       <span class="status-note">${approved ? 'This SOP is approved and ready to share.' : 'Review the steps, then approve to finalize.'}</span>
-      ${approved ? `<a class="btn ghost" href="/sops/${id}">Open visual guide</a>` : `<button type="button" class="approve" onclick="approveSop()">Approve this SOP</button>`}
+      ${approved ? `<a class="btn ghost" href="/sops/${id}">Open visual guide</a>` : `<button type="button" class="approve" onclick="approveSop(this)">Approve this SOP</button>`}
     </div>
   `;
 
   const script = `
-    async function submitAnswers() {
-      const answers = [...document.querySelectorAll('.answer')]
-        .map((el) => ({ stepIndex: el.dataset.step ? Number(el.dataset.step) : null, text: el.value }))
-        .filter((a) => a.text.trim());
-      await fetch('/sops/${id}/answers', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ answers }) });
-      location.reload();
+    async function post(url, body, btn) {
+      btn.disabled = true;
+      try {
+        const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body || {}) });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || 'the server returned ' + res.status);
+        }
+        return true;
+      } catch (err) {
+        alert('Saving failed (' + err.message + '). Your text is still here — try again.');
+        return false;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+    async function submitAnswers(btn) {
+      const filled = [...document.querySelectorAll('.answer')].filter((el) => el.value.trim());
+      if (!filled.length) return;
+      const answers = filled.map((el) => ({
+        stepIndex: el.dataset.step ? Number(el.dataset.step) : null,
+        question: el.dataset.q,
+        text: el.value,
+      }));
+      if (await post('/sops/${id}/answers', { answers }, btn)) {
+        for (const el of filled) el.disabled = true;
+        const note = document.getElementById('answers-feedback');
+        note.className = 'feedback ok';
+        note.textContent = 'Saved — your answers are folded into the SOP.';
+      }
     }
     async function correct(stepIndex, btn) {
       const box = btn.closest('.correct-body');
       const title = box.querySelector('.c-title').value;
       const detail = box.querySelector('.c-detail').value;
       const scope = box.querySelector('input[name="scope-' + stepIndex + '"]:checked').value;
-      await fetch('/sops/${id}/corrections', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ stepIndex, title, detail, scope }) });
-      location.reload();
+      if (await post('/sops/${id}/corrections', { stepIndex, title, detail, scope }, btn)) {
+        const li = box.closest('li');
+        li.querySelector('h3').childNodes[0].textContent = title;
+        li.querySelector('.detail').textContent = detail;
+        const note = box.querySelector('.feedback');
+        note.className = 'feedback ok';
+        note.textContent = scope === 'future' ? 'Saved — and remembered for future workflows.' : 'Saved.';
+      }
     }
-    async function approveSop() {
-      await fetch('/sops/${id}/approve', { method: 'POST' });
-      location.reload();
+    async function approveSop(btn) {
+      if (await post('/sops/${id}/approve', {}, btn)) location.reload();
     }
   `;
 
   return shell({ title: `Review — ${esc(sop.title)}`, body, extraCss: css, script });
+}
+
+function correctionPanel(step) {
+  return `
+        <details class="correct">
+          <summary>Not quite right? Correct this step</summary>
+          <div class="correct-body">
+            <label class="label" for="c-title-${step.index}">Step title</label>
+            <input id="c-title-${step.index}" class="c-title" value="${esc(step.title)}" />
+            <label class="label" for="c-detail-${step.index}">What should it say?</label>
+            <textarea id="c-detail-${step.index}" class="c-detail">${esc(step.detail)}</textarea>
+            <div class="scope">
+              <label><input type="radio" name="scope-${step.index}" value="this" checked /> Just this SOP</label>
+              <label><input type="radio" name="scope-${step.index}" value="future" /> All future workflows like this</label>
+            </div>
+            <div><button type="button" onclick="correct(${step.index}, this)">Save correction</button><div class="feedback"></div></div>
+          </div>
+        </details>`;
 }
 
 function highlight(step) {

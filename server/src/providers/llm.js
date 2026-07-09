@@ -27,7 +27,34 @@ export async function available() {
   }
 }
 
+// Long recordings are narrated in chunks so the request always fits a small
+// model's context window.
+const CHUNK_SIZE = 40;
+
 export async function narrate({ steps, context, lessons }) {
+  const chunks = [];
+  for (let i = 0; i < steps.length; i += CHUNK_SIZE) {
+    chunks.push(steps.slice(i, i + CHUNK_SIZE));
+  }
+
+  const merged = { title: undefined, intro: undefined, steps: [], questions: [] };
+  for (const [i, chunk] of chunks.entries()) {
+    const part = await narrateChunk(chunk, context, lessons, {
+      part: i + 1,
+      of: chunks.length,
+      total: steps.length,
+    });
+    if (i === 0) {
+      merged.title = part.title;
+      merged.intro = part.intro;
+    }
+    merged.steps.push(...part.steps);
+    merged.questions.push(...part.questions);
+  }
+  return merged;
+}
+
+async function narrateChunk(steps, context, lessons, { part, of, total }) {
   const input = steps.map((step) => {
     const safe = redactStep(step);
     return {
@@ -39,12 +66,13 @@ export async function narrate({ steps, context, lessons }) {
   });
 
   const guidance = (lessons || [])
-    .map((l) => `- ${l.rule}`)
+    .map((l) => `- ${redactText(l.rule)}`)
     .slice(0, 12)
     .join('\n');
 
   const prompt = [
     'Write a standard operating procedure from this recorded browser workflow.',
+    of > 1 ? `This is part ${part} of ${of} — steps ${steps[0].index}–${steps.at(-1).index} of ${total} in one continuous workflow.` : '',
     context?.task ? `Task: ${redactText(context.task)}` : '',
     context?.pre ? `Context from the person who recorded it: ${redactText(context.pre)}` : '',
     guidance ? `Apply these lessons from past reviews:\n${guidance}` : '',
@@ -87,7 +115,7 @@ export async function narrate({ steps, context, lessons }) {
     title: typeof parsed.title === 'string' ? parsed.title : undefined,
     intro: typeof parsed.intro === 'string' ? parsed.intro : undefined,
     steps: steps.map((step) => {
-      const match = (parsed.steps || []).find((s) => s.index === step.index);
+      const match = (parsed.steps || []).find((s) => s && Number(s.index) === step.index);
       return match?.title && match?.detail
         ? { title: String(match.title), detail: String(match.detail) }
         : null;
@@ -95,7 +123,10 @@ export async function narrate({ steps, context, lessons }) {
     questions: Array.isArray(parsed.questions)
       ? parsed.questions
           .filter((q) => typeof q?.text === 'string')
-          .map((q) => ({ stepIndex: Number.isInteger(q.stepIndex) ? q.stepIndex : null, text: q.text }))
+          .map((q) => {
+            const idx = q.stepIndex == null || q.stepIndex === '' ? null : Number(q.stepIndex);
+            return { stepIndex: Number.isInteger(idx) ? idx : null, text: q.text };
+          })
       : [],
   };
 }

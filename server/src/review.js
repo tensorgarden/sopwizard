@@ -15,14 +15,15 @@ export function review(sop) {
   };
 
   for (const q of sop.suggestedQuestions || []) {
+    if (q.answered) continue;
     const step = q.stepIndex != null ? sop.steps.find((s) => s.index === q.stepIndex) : null;
     if (q.stepIndex != null && !step) continue;
-    if (step?.clarified) continue;
+    if (step?.clarified || step?.corrected) continue;
     add(q.stepIndex ?? null, q.text);
   }
 
   for (const step of sop.steps) {
-    if (step.clarified) continue;
+    if (step.clarified || step.corrected) continue;
     const target = step.target;
 
     if (step.action === 'change' && target?.tag === 'select') {

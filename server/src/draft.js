@@ -7,8 +7,19 @@
 
 import { getProvider, rules } from './providers/index.js';
 import { loadLessons } from './lessons.js';
+import { redactStep, redactText } from './redact.js';
 
 export async function draft(recording, steps, context = {}) {
+  // Redact at the boundary: everything downstream — providers, exports, the
+  // persisted sop.json — only ever sees redacted labels and context.
+  steps = steps.map(redactStep);
+  context = {
+    ...context,
+    task: redactText(context.task),
+    pre: redactText(context.pre),
+    post: redactText(context.post),
+  };
+
   const provider = await getProvider();
   const lessons = await loadLessons();
 
