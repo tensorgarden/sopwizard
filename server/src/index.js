@@ -8,7 +8,7 @@ import { run } from './pipeline.js';
 import { review } from './review.js';
 import { applyAnswers, applyCorrection, approve } from './revise.js';
 import { persist, load, DATA_DIR } from './store.js';
-import { meter } from './usage.js';
+import { meter, record } from './usage.js';
 import { landingPage } from './export/landing.js';
 import { practicePage } from './export/practice.js';
 
@@ -107,13 +107,22 @@ const server = createServer(async (req, res) => {
     const action = parts[2];
 
     if (req.method === 'POST' && action === 'answers') {
-      return editSop(req, res, id, (sop, body) => applyAnswers(sop, body.answers));
+      return editSop(req, res, id, (sop, body) => {
+        void record('sop_answered', { sop: id, answers: body.answers?.length ?? 0 });
+        return applyAnswers(sop, body.answers);
+      });
     }
     if (req.method === 'POST' && action === 'corrections') {
-      return editSop(req, res, id, (sop, body) => applyCorrection(sop, body));
+      return editSop(req, res, id, (sop, body) => {
+        void record('sop_corrected', { sop: id, scope: body.scope ?? 'this' });
+        return applyCorrection(sop, body);
+      });
     }
     if (req.method === 'POST' && action === 'approve') {
-      return editSop(req, res, id, (sop) => approve(sop));
+      return editSop(req, res, id, (sop) => {
+        void record('sop_approved', { sop: id });
+        return approve(sop);
+      });
     }
     if (req.method === 'GET') {
       return serveFile(res, id, action === 'review' ? 'review.html' : action || 'index.html');
@@ -169,6 +178,9 @@ async function serveFile(res, id, file) {
   }
   try {
     const content = await readFile(join(DATA_DIR, id, file));
+    if (file === 'sop.md' || file === 'sop.docx') {
+      void record('sop_exported', { sop: id, format: file.split('.').pop() });
+    }
     res.writeHead(200, { 'content-type': contentType(file) });
     res.end(content);
   } catch {
