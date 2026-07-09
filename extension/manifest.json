@@ -3,7 +3,7 @@
   "name": "SOPWizard Recorder",
   "version": "0.0.1",
   "description": "Record a browser workflow and turn it into a standard operating procedure.",
-  "permissions": ["activeTab", "tabs", "storage"],
+  "permissions": ["activeTab", "tabs", "storage", "unlimitedStorage"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js",

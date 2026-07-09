@@ -1,12 +1,21 @@
 // Collects events for the active recording, attaches a keyframe to each, and
 // ships the batch — with any context the user added — to the pipeline when
 // recording stops.
+//
+// Events are persisted to extension storage as they arrive, because MV3
+// service workers can be shut down between events; a long pause mid-recording
+// must not lose captured steps. Writes are chained so they never interleave.
 
 const PIPELINE_BASE = 'http://localhost:8787';
 const CAPTURE_INTERVAL_MS = 400;
 
-let events = [];
 let lastCapture = 0;
+let chain = Promise.resolve();
+
+function enqueue(work) {
+  chain = chain.then(work, work);
+  return chain;
+}
 
 async function activeTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -24,28 +33,36 @@ async function keyframe() {
   }
 }
 
-async function context() {
-  const { task, preNotes } = await chrome.storage.local.get(['task', 'preNotes']);
-  return { task: task || '', pre: preNotes || '' };
+function recordEvent(event) {
+  return enqueue(async () => {
+    const shot = await keyframe();
+    const { events = [] } = await chrome.storage.local.get('events');
+    events.push({ ...event, keyframe: shot });
+    await chrome.storage.local.set({ events });
+  });
 }
 
 async function setRecording(on) {
   await chrome.storage.local.set({ recording: on });
-  if (on) events = [];
+  if (on) await chrome.storage.local.set({ events: [] });
 
   const tab = await activeTab();
   if (tab) {
     chrome.tabs.sendMessage(tab.id, { kind: 'set-recording', on }).catch(() => {});
   }
 
-  if (!on) await flush();
+  if (!on) await enqueue(flush);
 }
 
 async function flush() {
+  const { events = [], task, preNotes } = await chrome.storage.local.get(['events', 'task', 'preNotes']);
   if (events.length === 0) return;
 
-  const payload = { capturedAt: Date.now(), context: await context(), events };
-  events = [];
+  const payload = {
+    capturedAt: Date.now(),
+    context: { task: task || '', pre: preNotes || '' },
+    events,
+  };
 
   try {
     const res = await fetch(`${PIPELINE_BASE}/recordings`, {
@@ -54,16 +71,16 @@ async function flush() {
       body: JSON.stringify(payload),
     });
     const result = await res.json();
-    await chrome.storage.local.remove(['task', 'preNotes']);
+    await chrome.storage.local.remove(['events', 'task', 'preNotes']);
     if (result?.review) chrome.tabs.create({ url: `${PIPELINE_BASE}${result.review}` });
   } catch (err) {
-    console.warn('SOPWizard: could not reach the pipeline', err);
+    console.warn('SOPWizard: could not reach the pipeline — the recording is kept locally', err);
   }
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, respond) => {
   if (msg.kind === 'event') {
-    keyframe().then((shot) => events.push({ ...msg.event, keyframe: shot }));
+    recordEvent(msg.event);
     return;
   }
   if (msg.kind === 'toggle') {
