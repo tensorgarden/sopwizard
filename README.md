@@ -57,4 +57,4 @@ To see the pipeline without recording anything: `npm run demo` (writes a sample 
 
 ## Status
 
-Early development.
+Early development. SOPWizard is an [Uncovered](https://uncoveredapp.com) product.

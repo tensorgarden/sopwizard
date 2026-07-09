@@ -2,7 +2,7 @@
 // keyframes inlined, the acted-on element highlighted, and each step citing
 // its place in the recording. A single .html file, shareable and printable.
 
-import { shell, masthead } from './theme.js';
+import { shell, masthead, brandline } from './theme.js';
 import { escapeHtml as esc, mmss, hostOf } from './format.js';
 
 export function toHtml(sop) {
@@ -29,7 +29,7 @@ export function toHtml(sop) {
     <ol class="steps">${steps}
     </ol>
     ${sop.context.post ? `<div class="notes"><h2>Notes &amp; exceptions</h2><p>${esc(sop.context.post)}</p></div>` : ''}
-    <div class="footer"><span>Generated from a recorded workflow${sop.approvedAt ? ` · approved ${new Date(sop.approvedAt).toLocaleDateString()}` : ''}</span></div>
+    <div class="footer"><span>Generated from a recorded workflow${sop.approvedAt ? ` · approved ${new Date(sop.approvedAt).toLocaleDateString()}` : ''}</span>${brandline()}</div>
   `;
 
   return shell({ title: esc(sop.title), body });

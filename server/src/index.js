@@ -8,6 +8,7 @@ import { run } from './pipeline.js';
 import { review } from './review.js';
 import { applyAnswers, applyCorrection, approve } from './revise.js';
 import { persist, load, DATA_DIR } from './store.js';
+import { meter } from './usage.js';
 import { landingPage } from './export/landing.js';
 import { practicePage } from './export/practice.js';
 
@@ -90,6 +91,7 @@ const server = createServer(async (req, res) => {
       const { sop, clarifications } = await run(body, body.context || {});
       const id = randomUUID();
       await persist(id, sop, clarifications);
+      await meter(id, sop);
       return send(res, 201, {
         id,
         steps: sop.steps.length,

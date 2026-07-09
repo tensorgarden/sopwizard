@@ -1,7 +1,7 @@
 // The home page of a running SOPWizard server: get the extension, see how it
 // works, and open any SOP that's been generated.
 
-import { shell, masthead } from './theme.js';
+import { shell, masthead, brandline } from './theme.js';
 import { escapeHtml as esc } from './format.js';
 
 const css = `
@@ -82,6 +82,8 @@ export function landingPage(sops = []) {
       <h2>Your SOPs</h2>
       ${rows}
     </div>
+
+    <div class="footer">${brandline()}</div>
   `;
 
   return shell({ title: 'SOPWizard', body, extraCss: css });

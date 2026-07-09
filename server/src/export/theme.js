@@ -135,3 +135,7 @@ export function masthead(right = '') {
     <span>${right}</span>
   </div>`;
 }
+
+export function brandline() {
+  return `<span>SOPWizard is an <a href="https://uncoveredapp.com">Uncovered</a> product.</span>`;
+}
