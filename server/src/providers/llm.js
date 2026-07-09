@@ -1,11 +1,6 @@
-// Model-backed narration over any chat-completions-style HTTP endpoint.
-//
-// Designed for small, inexpensive models: the whole SOP is narrated in a
-// single request with a compact prompt and strict JSON output. Works with a
-// local Ollama server out of the box (`ollama pull llama3.2`), or any hosted
-// endpoint via LLM_URL / LLM_MODEL / LLM_API_KEY.
-//
-// Only redacted text ever reaches the model — screenshots stay local.
+// Model-backed narration over any chat-completions endpoint. Works with a
+// local Ollama out of the box, or set LLM_URL / LLM_MODEL / LLM_API_KEY.
+// Only redacted text reaches the model; screenshots stay local.
 
 import { redactStep, redactText } from '../redact.js';
 
@@ -27,8 +22,7 @@ export async function available() {
   }
 }
 
-// Long recordings are narrated in chunks so the request always fits a small
-// model's context window.
+// Narrate in chunks so long recordings fit a small model's context.
 const CHUNK_SIZE = 40;
 
 export async function narrate({ steps, context, lessons }) {

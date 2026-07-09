@@ -1,10 +1,6 @@
-// Groups a raw event stream into ordered SOP steps.
-//
-// Steps break on natural boundaries: a navigation is inserted whenever the URL
-// changes, and every recorded interaction becomes its own step. Events are
-// ordered by their sequence number, so out-of-order delivery is fine. Each
-// step keeps its offset from the start of the recording so the SOP can cite
-// its evidence.
+// Groups the raw event stream into ordered steps: a navigation step whenever
+// the URL changes, one step per interaction. Each step keeps its offset from
+// the start of the recording.
 
 export function segment(recording) {
   const events = [...(recording.events || [])].sort((a, b) => a.seq - b.seq);

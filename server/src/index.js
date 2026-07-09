@@ -33,10 +33,8 @@ function sendHtml(res, html) {
   res.end(html);
 }
 
-// This server binds to loopback and holds workflow recordings, so requests
-// initiated by other websites in the browser are rejected: state changes must
-// come from the extension or our own pages, and the Host header must be a
-// local one (which also blocks DNS-rebinding tricks).
+// Reject browser requests from other origins and foreign Host headers
+// (blocks cross-site writes and DNS rebinding).
 function requestAllowed(req) {
   const host = (req.headers.host || '').split(':')[0];
   if (!['localhost', '127.0.0.1', '[::1]'].includes(host)) return false;
@@ -165,8 +163,7 @@ async function editSop(req, res, id, edit) {
 }
 
 async function serveFile(res, id, file) {
-  // Ids are UUIDs and only rendered artifacts are served — the raw sop.json
-  // (which carries the full recording) stays on disk.
+  // Only rendered artifacts are served; the raw sop.json stays on disk.
   if (!/^[\w-]{1,64}$/.test(id) || !SOP_FILES.has(file)) {
     return send(res, 404, { error: 'not found' });
   }
@@ -193,7 +190,7 @@ function packExtension() {
   });
 }
 
-// Long recordings upload large batches of screenshots; never cut them off.
+// Long recordings upload large batches; don't cut them off.
 server.requestTimeout = 0;
 
 server.listen(PORT, '127.0.0.1', () => {

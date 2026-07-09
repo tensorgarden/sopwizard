@@ -1,8 +1,5 @@
-// Deterministic narration.
-//
-// Writes each step's title and detail from the captured event and element
-// descriptor alone — no model, no network. It's the fallback provider, so the
-// pipeline runs anywhere, and the baseline a model is measured against.
+// Deterministic narration from the captured event and element descriptor —
+// no model, no network. The fallback provider.
 
 export const name = 'rules';
 

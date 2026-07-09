@@ -1,7 +1,5 @@
-// Collects the open questions for a drafted SOP: anything the narrator flagged
-// as ambiguous, plus deterministic checks the recording alone can't answer.
-//
-// A question with a null stepIndex applies to the SOP as a whole.
+// Open questions for a drafted SOP: whatever the narrator flagged, plus
+// deterministic checks. A null stepIndex means the SOP as a whole.
 
 export function review(sop) {
   const questions = [];

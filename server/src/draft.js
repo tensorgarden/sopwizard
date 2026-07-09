@@ -1,17 +1,12 @@
-// Builds a structured SOP from segmented steps and any user-supplied context.
-// The structured SOP is the single representation every exporter renders from.
-//
-// Narration comes from the active provider; if a model-backed provider fails
-// mid-request, the deterministic rules provider fills in, so drafting never
-// blocks on a model.
+// Builds the structured SOP every exporter renders from. If the model
+// provider fails mid-request, rules narration fills in.
 
 import { getProvider, rules } from './providers/index.js';
 import { loadLessons } from './lessons.js';
 import { redactStep, redactText } from './redact.js';
 
 export async function draft(recording, steps, context = {}) {
-  // Redact at the boundary: everything downstream — providers, exports, the
-  // persisted sop.json — only ever sees redacted labels and context.
+  // Redact here so providers, exports, and sop.json all inherit it.
   steps = steps.map(redactStep);
   context = {
     ...context,

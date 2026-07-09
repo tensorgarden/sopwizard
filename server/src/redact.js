@@ -1,10 +1,5 @@
-// Deterministic redaction of sensitive values in captured text.
-//
-// Recordings only ever capture element labels and page URLs — never typed
-// values — but labels can still surface personal data (a row titled with a
-// customer's name and account number, for example). Anything leaving the
-// local pipeline passes through here first; this is a hard gate, not a model
-// behavior.
+// Strips sensitive values from captured text. Everything leaving the local
+// pipeline passes through here first.
 
 const PATTERNS = [
   { name: 'ssn', re: /\b\d{3}-\d{2}-\d{4}\b/g },

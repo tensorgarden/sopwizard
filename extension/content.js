@@ -115,9 +115,8 @@ chrome.runtime.onMessage.addListener((msg) => {
   if (msg.kind === 'set-recording') setRecording(msg.on);
 });
 
-// Storage is the source of truth: this arms tabs that were already open when
-// recording started, and disarms every tab when it stops — not just the one
-// that happened to be active.
+// Storage is the source of truth — arms/disarms every open tab, not just
+// the active one.
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && changes.recording) setRecording(Boolean(changes.recording.newValue));
 });

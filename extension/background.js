@@ -1,16 +1,7 @@
-// Collects events for the active recording, attaches a keyframe to each, and
-// ships the batch — with any context the user added — to the pipeline when
-// recording stops.
-//
-// Durability rules, in order of importance:
-// - Events are written to extension storage one key per event, so recordings
-//   survive service-worker shutdowns and never rewrite the whole batch.
-// - Every event gets a recording-global sequence on arrival; per-page counters
-//   reset on navigation and can't be trusted for ordering.
-// - A failed upload keeps the recording; nothing is deleted until the server
-//   has accepted it.
-// - Screenshots are only taken on the site where the recording started, so a
-//   mid-task detour to another tab is never captured.
+// Collects events for the active recording and ships the batch to the
+// pipeline on stop. Events persist to storage one key per event (service
+// workers get killed), get a global sequence on arrival (per-page counters
+// reset), and are kept until the server accepts them.
 
 const PIPELINE_BASE = 'http://localhost:8787';
 const CAPTURE_INTERVAL_MS = 400;
@@ -55,9 +46,8 @@ function recordEvent(event, windowId) {
       'recordOrigin',
       'eventCount',
     ]);
-    if (!recording) return; // a stale tab can't write phantom events
+    if (!recording) return;
 
-    // Capture as close to the action as possible, pinned to the tab's window.
     const shot = await keyframe(windowId, event.url, recordOrigin);
 
     await chrome.storage.local.set({
@@ -111,8 +101,8 @@ async function setRecording(on) {
     chrome.alarms.create('idle-check', { periodInMinutes: 1 });
     setBadge('rec');
 
-    // Storage-change listeners arm every open tab; this message just reaches
-    // the active one faster, and tells us whether the recorder is attached.
+    // Storage changes arm every tab; the message tells us whether the
+    // recorder is attached to this one.
     let attached = true;
     if (tab) {
       try {
@@ -155,7 +145,7 @@ async function flush() {
     if (result?.review) chrome.tabs.create({ url: `${PIPELINE_BASE}${result.review}` });
     return { status: 'sent', steps: events.length };
   } catch {
-    // Keep the events so the recording can be sent once the server is up.
+    // Keep the events for retry.
     setBadge('error');
     return { status: 'offline', steps: events.length };
   }

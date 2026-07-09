@@ -1,6 +1,4 @@
-// Writes pipeline results to disk: one folder per SOP holding the structured
-// JSON, the Markdown master, the Word document, the visual guide, and the
-// review page.
+// One folder per SOP: structured JSON plus every rendered artifact.
 
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { join } from 'node:path';

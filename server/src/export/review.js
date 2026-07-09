@@ -1,8 +1,5 @@
-// The review surface: answer open questions, correct any step in plain
-// language, and approve the SOP when it's right. Corrections only touch the
-// step they name; a correction can also be marked as applying to future
-// workflows, which turns it into a durable lesson. Once approved, the page
-// goes read-only — editing again reopens the draft.
+// Review page: answer open questions, correct steps, approve. Read-only
+// once approved.
 
 import { shell, masthead } from './theme.js';
 import { escapeHtml as esc, mmss, hostOf } from './format.js';

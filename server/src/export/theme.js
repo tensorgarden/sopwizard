@@ -1,6 +1,4 @@
-// The shared look for every HTML surface: the visual guide, the review page,
-// and the landing page. One design language so the whole product feels like a
-// single crafted document rather than a set of tools.
+// Shared look for every HTML surface: guide, review, landing.
 
 export const theme = `
   :root {

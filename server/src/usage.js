@@ -1,19 +1,12 @@
-// Usage metering.
-//
-// Each successfully generated SOP appends one record here — the unit the
-// product bills on. Locally this is just a ledger on disk; a hosted deployment
-// forwards the same records to the billing provider. Reviews, corrections,
-// and re-exports are deliberately not metered.
+// Usage ledger: one record per generated SOP. Reviews, corrections, and
+// re-exports are not metered.
 
 import { mkdir, appendFile, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const FILE = join(process.cwd(), 'data', 'usage.jsonl');
 
-// A credit covers one SOP of ordinary size. Oversized recordings cost more
-// along whichever axis is larger — wall-clock length or step count — because
-// both drive processing cost, and because a single marathon recording packing
-// several procedures into "one SOP" should meter like the several SOPs it is.
+// Credits scale with recording length or step count, whichever is larger.
 const BLOCK_MINUTES = 15;
 const BLOCK_STEPS = 40;
 

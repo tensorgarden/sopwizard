@@ -1,6 +1,5 @@
-// Renders a SOP to a self-contained visual guide: numbered steps with their
-// keyframes inlined, the acted-on element highlighted, and each step citing
-// its place in the recording. A single .html file, shareable and printable.
+// Self-contained visual guide: numbered steps, keyframes with the acted-on
+// element highlighted, recording timestamps. Printable.
 
 import { shell, masthead, brandline } from './theme.js';
 import { escapeHtml as esc, mmss, hostOf } from './format.js';

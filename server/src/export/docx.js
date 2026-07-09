@@ -1,5 +1,4 @@
-// Renders a SOP to a Word document — the same structured content as the
-// Markdown master, in the format teams (and downstream tools) most often want.
+// Word export — same content as the Markdown master.
 
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 import { mmss } from './format.js';

@@ -1,10 +1,6 @@
-// Narration providers.
-//
-// A provider implements `narrate({ steps, context, lessons })` and returns
-// `{ title?, intro?, steps: [{title, detail} | null], questions? }`. The
-// model-backed provider is used when its endpoint is reachable (or when
-// SOP_PROVIDER forces a choice); otherwise the deterministic rules provider
-// keeps the pipeline working with no configuration at all.
+// A provider implements narrate({ steps, context, lessons }) -> { title?,
+// intro?, steps, questions? }. The model provider is used when reachable
+// (or when SOP_PROVIDER forces one); rules otherwise.
 
 import * as rules from './rules.js';
 import * as llm from './llm.js';

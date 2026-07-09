@@ -1,9 +1,5 @@
-// Folds clarification answers and step corrections back into a SOP. Both edit
-// only the parts they name, leaving the rest of the SOP untouched.
-//
-// A correction marked as applying to future workflows also becomes a durable
-// lesson, loaded into context the next time a similar SOP is drafted. Editing
-// an approved SOP demotes it to a draft — approval means "reviewed as-is".
+// Folds answers and corrections back into a SOP, touching only the parts
+// they name. Editing an approved SOP demotes it to a draft.
 
 import { addLesson } from './lessons.js';
 import { redactText } from './redact.js';

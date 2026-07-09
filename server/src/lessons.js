@@ -1,9 +1,5 @@
-// Durable lessons learned from review.
-//
-// When a reviewer corrects a step and marks the fix as applying to future
-// workflows, or answers a clarification question, the outcome is kept here and
-// loaded into context before the next generation — so each reviewed SOP makes
-// the following drafts better.
+// Corrections marked as applying to future workflows are kept here and
+// loaded into context before the next generation.
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';

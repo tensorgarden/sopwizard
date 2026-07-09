@@ -1,5 +1,4 @@
-// The home page of a running SOPWizard server: get the extension, see how it
-// works, and open any SOP that's been generated.
+// Home page: extension download, install steps, and the SOP library.
 
 import { shell, masthead, brandline } from './theme.js';
 import { escapeHtml as esc } from './format.js';

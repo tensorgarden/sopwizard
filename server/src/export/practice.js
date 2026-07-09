@@ -1,7 +1,5 @@
-// A built-in practice environment: a small customer-records app with a
-// realistic multi-page flow (list → form → confirmation) to record against.
-// Views switch through the URL hash so navigation shows up in the SOP, and
-// the form is a real form so field and submit events are captured.
+// Practice environment: a small customer-records app to record against.
+// Hash routing so navigation registers; a real form so submits do.
 
 import { shell } from './theme.js';
 

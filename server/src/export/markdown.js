@@ -1,6 +1,5 @@
-// Renders a SOP to a clean Markdown document — the master format other outputs
-// derive from. One SOP per file, heading hierarchy, no meaning carried by
-// tables or images, so it stays readable and easy to ingest downstream.
+// Markdown master: one SOP per file, heading hierarchy, no meaning carried
+// by tables or images.
 
 import { mmss } from './format.js';
 
