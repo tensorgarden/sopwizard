@@ -10,13 +10,19 @@ import { join } from 'node:path';
 
 const FILE = join(process.cwd(), 'data', 'usage.jsonl');
 
-// Recordings longer than one block bill one extra credit per block started.
+// A credit covers one SOP of ordinary size. Oversized recordings cost more
+// along whichever axis is larger — wall-clock length or step count — because
+// both drive processing cost, and because a single marathon recording packing
+// several procedures into "one SOP" should meter like the several SOPs it is.
 const BLOCK_MINUTES = 15;
+const BLOCK_STEPS = 40;
 
 export function creditsFor(sop) {
   const last = sop.steps.at(-1)?.t ?? 0;
   const minutes = last / 60000;
-  return 1 + Math.max(0, Math.ceil((minutes - BLOCK_MINUTES) / BLOCK_MINUTES));
+  const timeBlocks = Math.max(0, Math.ceil((minutes - BLOCK_MINUTES) / BLOCK_MINUTES));
+  const stepBlocks = Math.max(0, Math.ceil((sop.steps.length - BLOCK_STEPS) / BLOCK_STEPS));
+  return 1 + Math.max(timeBlocks, stepBlocks);
 }
 
 export async function meter(id, sop) {
