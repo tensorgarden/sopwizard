@@ -1,9 +1,6 @@
-// Optional cloud sync: mirrors SOP metadata, usage events, and errors to the
-// team workspace. Signs in as a real account, so row-level security decides
-// what this instance may write. Disabled unless configured; local operation
-// never depends on it.
-//
-// Config: SYNC_URL, SYNC_ANON_KEY, SYNC_EMAIL, SYNC_PASSWORD.
+// Optional cloud sync: mirrors SOPs, usage events, and errors to the team
+// workspace, signed in as a real account so row-level security governs
+// writes. Config: SYNC_URL, SYNC_ANON_KEY, SYNC_EMAIL, SYNC_PASSWORD.
 
 const URL_BASE = process.env.SYNC_URL;
 const ANON_KEY = process.env.SYNC_ANON_KEY;
