@@ -8,12 +8,12 @@ import { render } from './render.js';
 import { persist } from './store.js';
 
 const recording = JSON.parse(await readFile(join(process.cwd(), 'samples', 'recording.json'), 'utf8'));
-const { sop, clarifications } = run(recording, recording.context || {});
+const { sop, clarifications } = await run(recording, recording.context || {});
 const dir = await persist('sample', sop, clarifications);
 
 const outputs = await render(sop);
 console.log(outputs.markdown.content);
-console.log(`Wrote ${sop.steps.length} steps (md, docx, html) to ${dir}`);
+console.log(`Narrated by the ${sop.narrator} provider. Wrote ${sop.steps.length} steps (md, docx, html) to ${dir}`);
 if (clarifications.length) {
   console.log(`\n${clarifications.length} question(s) for review:`);
   for (const c of clarifications) console.log(`  - ${c.text}`);

@@ -1,14 +1,37 @@
-// A self-contained review page: answer the open questions and correct any step
-// in plain language. Edits post back to the pipeline and only touch the step
-// they name.
+// The review surface: answer open questions, correct any step in plain
+// language, and approve the SOP when it's right. Corrections only touch the
+// step they name; a correction can also be marked as applying to future
+// workflows, which turns it into a durable lesson.
+
+import { shell, masthead } from './theme.js';
+import { escapeHtml as esc, mmss, hostOf } from './format.js';
+
+const css = `
+  .clarify { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; margin: 28px 0 6px; box-shadow: var(--shadow); }
+  .clarify h2 { margin: 0 0 4px; font: 600 17px var(--sans); }
+  .clarify .hint { margin: 0 0 16px; color: var(--muted); font-size: 13.5px; }
+  .q { margin-bottom: 14px; }
+  .q label { display: block; margin-bottom: 6px; font-weight: 500; }
+  .review-step h3 { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px; }
+  details.correct { margin-top: 10px; }
+  details.correct summary { cursor: pointer; color: var(--muted); font-size: 13px; font-weight: 500; }
+  details.correct summary:hover { color: var(--accent); }
+  .correct-body { margin-top: 10px; padding: 16px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; display: grid; gap: 10px; }
+  .correct-body .label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: -4px; }
+  .scope { display: flex; gap: 18px; font-size: 13.5px; color: #3b4554; }
+  .scope label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; font-weight: 400; }
+  .approve-bar { position: sticky; bottom: 0; margin-top: 40px; padding: 14px 18px; background: rgba(255,255,255,.92); backdrop-filter: blur(8px); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+  .approve-bar .status-note { font-size: 13.5px; color: var(--muted); }
+  .thumb { max-width: 420px; }
+`;
 
 export function reviewPage(id, sop, clarifications = []) {
   const questions = clarifications
     .map(
       (c) => `
         <div class="q">
-          <label>${escape(c.text)}</label>
-          <input class="answer" data-step="${c.stepIndex == null ? '' : c.stepIndex}" />
+          <label>${esc(c.text)}</label>
+          <input class="answer" data-step="${c.stepIndex == null ? '' : c.stepIndex}" placeholder="Type your answer…" />
         </div>`
     )
     .join('');
@@ -16,71 +39,75 @@ export function reviewPage(id, sop, clarifications = []) {
   const steps = sop.steps
     .map(
       (step) => `
-        <li${step.corrected ? ' class="edited"' : ''}>
-          <h3>${escape(step.title)}</h3>
-          <p>${escape(step.detail)}</p>
-          <details>
-            <summary>Correct this step</summary>
-            <input class="c-title" value="${escape(step.title)}" />
-            <textarea class="c-detail">${escape(step.detail)}</textarea>
-            <button type="button" onclick="correct(${step.index}, this)">Save correction</button>
-          </details>
-        </li>`
+      <li class="step review-step">
+        <h3>${esc(step.title)}${mmss(step.t) ? `<span class="evidence">▸ ${mmss(step.t)}</span>` : ''}${step.corrected ? '<span class="edited-flag">edited</span>' : ''}</h3>
+        <p class="detail">${esc(step.detail)}</p>
+        ${step.keyframe ? `<figure class="shot thumb" style="margin:0">${highlight(step)}<img src="${esc(step.keyframe)}" alt="Step ${step.index}" loading="lazy" /></figure>` : ''}
+        <details class="correct">
+          <summary>Not quite right? Correct this step</summary>
+          <div class="correct-body">
+            <span class="label">Step title</span>
+            <input class="c-title" value="${esc(step.title)}" />
+            <span class="label">What should it say?</span>
+            <textarea class="c-detail">${esc(step.detail)}</textarea>
+            <div class="scope">
+              <label><input type="radio" name="scope-${step.index}" value="this" checked /> Just this SOP</label>
+              <label><input type="radio" name="scope-${step.index}" value="future" /> All future workflows like this</label>
+            </div>
+            <div><button type="button" onclick="correct(${step.index}, this)">Save correction</button></div>
+          </div>
+        </details>
+      </li>`
     )
     .join('');
 
-  return `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Review — ${escape(sop.title)}</title>
-    <style>
-      body { font: 15px/1.5 system-ui, sans-serif; color: #1f2328; max-width: 720px; margin: 40px auto; padding: 0 20px; }
-      h1 { font-size: 22px; }
-      h2 { font-size: 16px; margin-top: 28px; }
-      .clarify { background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 8px; padding: 14px 16px; }
-      .q { margin-bottom: 10px; }
-      label { display: block; margin-bottom: 4px; }
-      input, textarea { width: 100%; padding: 6px 8px; border: 1px solid #d0d7de; border-radius: 6px; font: inherit; box-sizing: border-box; }
-      textarea { min-height: 60px; margin-top: 6px; }
-      ol { padding-left: 20px; }
-      li { margin-bottom: 14px; }
-      li.edited h3::after { content: ' (edited)'; color: #57606a; font-weight: 400; font-size: 13px; }
-      h3 { margin: 0 0 2px; font-size: 15px; }
-      p { margin: 0 0 6px; }
-      details summary { cursor: pointer; color: #57606a; font-size: 13px; }
-      button { margin-top: 8px; padding: 7px 12px; border: 0; border-radius: 6px; background: #1f6feb; color: #fff; font-weight: 600; cursor: pointer; }
-    </style>
-  </head>
-  <body>
-    <h1>${escape(sop.title)}</h1>
-    ${clarifications.length ? `<section class="clarify"><h2>A few questions</h2>${questions}<button type="button" onclick="submitAnswers()">Save answers</button></section>` : ''}
-    <h2>Steps</h2>
-    <ol>${steps}
+  const approved = sop.status === 'approved';
+
+  const body = `
+    ${masthead(sop.source.url ? `Recorded in ${esc(hostOf(sop.source.url))}` : '')}
+    <span class="badge ${approved ? 'approved' : 'draft'}">${approved ? 'Approved' : 'Draft — in review'}</span>
+    <h1 class="doc-title">${esc(sop.title)}</h1>
+    <div class="doc-meta"><span>${sop.steps.length} steps</span><span class="sep">·</span><a href="/sops/${id}">Visual guide</a><span class="sep">·</span><a href="/sops/${id}/sop.md">Markdown</a><span class="sep">·</span><a href="/sops/${id}/sop.docx">Word</a></div>
+    ${sop.intro ? `<p class="intro">${esc(sop.intro)}</p>` : ''}
+    ${clarifications.length ? `<section class="clarify"><h2>A few questions before this is finished</h2><p class="hint">Answers are folded into the exact step they belong to — nothing else is touched.</p>${questions}<button type="button" onclick="submitAnswers()">Save answers</button></section>` : ''}
+    <ol class="steps">${steps}
     </ol>
-    <p><a href="/sops/${id}">Visual guide</a> &middot; <a href="/sops/${id}/sop.md">Markdown</a> &middot; <a href="/sops/${id}/sop.docx">Word</a></p>
-    <script>
-      async function submitAnswers() {
-        const answers = [...document.querySelectorAll('.answer')]
-          .map((el) => ({ stepIndex: el.dataset.step ? Number(el.dataset.step) : null, text: el.value }))
-          .filter((a) => a.text.trim());
-        await fetch('/sops/${id}/answers', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ answers }) });
-        location.reload();
-      }
-      async function correct(stepIndex, btn) {
-        const li = btn.closest('li');
-        const title = li.querySelector('.c-title').value;
-        const detail = li.querySelector('.c-detail').value;
-        await fetch('/sops/${id}/corrections', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ stepIndex, title, detail }) });
-        location.reload();
-      }
-    </script>
-  </body>
-</html>
-`;
+    ${sop.context.post ? `<div class="notes"><h2>Notes &amp; exceptions</h2><p>${esc(sop.context.post)}</p></div>` : ''}
+    <div class="approve-bar">
+      <span class="status-note">${approved ? 'This SOP is approved and ready to share.' : 'Review the steps, then approve to finalize.'}</span>
+      ${approved ? `<a class="btn ghost" href="/sops/${id}">Open visual guide</a>` : `<button type="button" class="approve" onclick="approveSop()">Approve this SOP</button>`}
+    </div>
+  `;
+
+  const script = `
+    async function submitAnswers() {
+      const answers = [...document.querySelectorAll('.answer')]
+        .map((el) => ({ stepIndex: el.dataset.step ? Number(el.dataset.step) : null, text: el.value }))
+        .filter((a) => a.text.trim());
+      await fetch('/sops/${id}/answers', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ answers }) });
+      location.reload();
+    }
+    async function correct(stepIndex, btn) {
+      const box = btn.closest('.correct-body');
+      const title = box.querySelector('.c-title').value;
+      const detail = box.querySelector('.c-detail').value;
+      const scope = box.querySelector('input[name="scope-' + stepIndex + '"]:checked').value;
+      await fetch('/sops/${id}/corrections', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ stepIndex, title, detail, scope }) });
+      location.reload();
+    }
+    async function approveSop() {
+      await fetch('/sops/${id}/approve', { method: 'POST' });
+      location.reload();
+    }
+  `;
+
+  return shell({ title: `Review — ${esc(sop.title)}`, body, extraCss: css, script });
 }
 
-function escape(value) {
-  return String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function highlight(step) {
+  const rect = step.target?.rect;
+  const view = step.viewport;
+  if (!rect || !view?.w || !view?.h) return '';
+  const pct = (value, total) => Math.max(0, Math.min(100, (value / total) * 100)).toFixed(2);
+  return `<span class="hl" style="left:${pct(rect.x, view.w)}%;top:${pct(rect.y, view.h)}%;width:${pct(rect.w, view.w)}%;height:${pct(rect.h, view.h)}%"></span>`;
 }

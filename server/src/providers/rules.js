@@ -1,11 +1,18 @@
 // Deterministic narration.
 //
-// Turns a step into a short title and a one-line detail using only the captured
-// event and element descriptor — no model, no network. It's the default
-// provider so the pipeline runs anywhere, and the baseline a model is measured
-// against.
+// Writes each step's title and detail from the captured event and element
+// descriptor alone — no model, no network. It's the fallback provider, so the
+// pipeline runs anywhere, and the baseline a model is measured against.
 
-export function narrate(step) {
+export const name = 'rules';
+
+export async function narrate({ steps }) {
+  return {
+    steps: steps.map((step) => one(step)),
+  };
+}
+
+function one(step) {
   const target = label(step.target);
 
   switch (step.action) {

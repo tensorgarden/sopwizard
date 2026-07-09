@@ -3,13 +3,16 @@ import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
+import { execFile } from 'node:child_process';
 import { run } from './pipeline.js';
 import { review } from './review.js';
-import { applyAnswers, applyCorrection } from './revise.js';
+import { applyAnswers, applyCorrection, approve } from './revise.js';
 import { persist, load, DATA_DIR } from './store.js';
+import { landingPage } from './export/landing.js';
 
 const PORT = process.env.PORT || 8787;
-const EXTENSION_ZIP = fileURLToPath(new URL('../../dist/sopwizard-extension.zip', import.meta.url));
+const ROOT = fileURLToPath(new URL('../..', import.meta.url));
+const EXTENSION_ZIP = join(ROOT, 'dist', 'sopwizard-extension.zip');
 
 async function readJson(req) {
   const chunks = [];
@@ -22,45 +25,9 @@ function send(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
-async function serveIndex(res) {
-  let ids = [];
-  try {
-    const entries = await readdir(DATA_DIR, { withFileTypes: true });
-    ids = entries.filter((e) => e.isDirectory()).map((e) => e.name);
-  } catch {
-    // no SOPs generated yet
-  }
-
-  const list = ids.length
-    ? ids.map((id) => `<li><a href="/sops/${id}/review">${id}</a> &middot; <a href="/sops/${id}">guide</a></li>`).join('')
-    : '<li>No SOPs yet — record one with the extension, or run <code>npm run demo</code>.</li>';
-
-  const html = `<!doctype html>
-<html lang="en">
-  <head><meta charset="utf-8" /><title>SOPWizard</title>
-    <style>body{font:15px/1.5 system-ui,sans-serif;max-width:640px;margin:48px auto;padding:0 20px;color:#1f2328}a{color:#1f6feb}code{background:#f6f8fa;padding:1px 5px;border-radius:4px}</style>
-  </head>
-  <body>
-    <h1>SOPWizard</h1>
-    <p>Pipeline running on :8787.</p>
-    <p><a href="/extension.zip">Download the Chrome extension (.zip)</a> — unzip, then load it unpacked at <code>chrome://extensions</code>.</p>
-    <h2>SOPs</h2>
-    <ul>${list}</ul>
-  </body>
-</html>
-`;
+function sendHtml(res, html) {
   res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
   res.end(html);
-}
-
-async function serveFile(res, id, file) {
-  try {
-    const content = await readFile(join(DATA_DIR, id, file));
-    res.writeHead(200, { 'content-type': contentType(file) });
-    res.end(content);
-  } catch {
-    send(res, 404, { error: 'not found' });
-  }
 }
 
 const server = createServer(async (req, res) => {
@@ -68,7 +35,7 @@ const server = createServer(async (req, res) => {
   const parts = pathname.split('/').filter(Boolean);
 
   if (req.method === 'GET' && pathname === '/') {
-    return serveIndex(res);
+    return sendHtml(res, landingPage(await listSops()));
   }
 
   if (req.method === 'GET' && pathname === '/health') {
@@ -91,7 +58,7 @@ const server = createServer(async (req, res) => {
   if (req.method === 'POST' && pathname === '/recordings') {
     try {
       const body = await readJson(req);
-      const { sop, clarifications } = run(body, body.context || {});
+      const { sop, clarifications } = await run(body, body.context || {});
       const id = randomUUID();
       await persist(id, sop, clarifications);
       return send(res, 201, {
@@ -116,6 +83,9 @@ const server = createServer(async (req, res) => {
     if (req.method === 'POST' && action === 'corrections') {
       return editSop(req, res, id, (sop, body) => applyCorrection(sop, body));
     }
+    if (req.method === 'POST' && action === 'approve') {
+      return editSop(req, res, id, (sop) => approve(sop));
+    }
     if (req.method === 'GET') {
       return serveFile(res, id, action === 'review' ? 'review.html' : action || 'index.html');
     }
@@ -124,16 +94,52 @@ const server = createServer(async (req, res) => {
   send(res, 404, { error: 'not found' });
 });
 
+async function listSops() {
+  let entries = [];
+  try {
+    entries = (await readdir(DATA_DIR, { withFileTypes: true })).filter((e) => e.isDirectory());
+  } catch {
+    return [];
+  }
+
+  const sops = [];
+  for (const entry of entries) {
+    try {
+      const sop = await load(entry.name);
+      sops.push({
+        id: entry.name,
+        title: sop.title,
+        status: sop.status,
+        steps: sop.steps.length,
+        createdAt: sop.createdAt,
+      });
+    } catch {
+      // skip anything unreadable
+    }
+  }
+  return sops.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+}
+
 async function editSop(req, res, id, edit) {
   try {
     const body = await readJson(req);
     const sop = await load(id);
-    edit(sop, body);
+    await edit(sop, body);
     const clarifications = review(sop);
     await persist(id, sop, clarifications);
     send(res, 200, { sop, clarifications });
   } catch (err) {
     send(res, 400, { error: err.message });
+  }
+}
+
+async function serveFile(res, id, file) {
+  try {
+    const content = await readFile(join(DATA_DIR, id, file));
+    res.writeHead(200, { 'content-type': contentType(file) });
+    res.end(content);
+  } catch {
+    send(res, 404, { error: 'not found' });
   }
 }
 
@@ -145,6 +151,13 @@ function contentType(file) {
   return 'text/plain; charset=utf-8';
 }
 
+function packExtension() {
+  execFile('zip', ['-qr', EXTENSION_ZIP, 'extension'], { cwd: ROOT }, (err) => {
+    if (err) console.warn('could not build extension zip:', err.message);
+  });
+}
+
 server.listen(PORT, () => {
-  console.log(`pipeline listening on :${PORT}`);
+  execFile('mkdir', ['-p', join(ROOT, 'dist')], () => packExtension());
+  console.log(`SOPWizard running — open http://localhost:${PORT}`);
 });

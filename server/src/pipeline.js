@@ -5,9 +5,9 @@ import { segment } from './segment.js';
 import { draft } from './draft.js';
 import { review } from './review.js';
 
-export function run(recording, context = {}) {
+export async function run(recording, context = {}) {
   const steps = segment(recording);
-  const sop = draft(recording, steps, context);
+  const sop = await draft(recording, steps, context);
   const clarifications = review(sop);
   return { sop, clarifications };
 }

@@ -3,53 +3,56 @@
   <head>
     <meta charset="utf-8" />
     <style>
+      :root {
+        --ink: #17202e;
+        --muted: #626c7a;
+        --line: #e5e2d9;
+        --accent: #2b59c3;
+        --red: #b3362f;
+      }
       body {
-        font: 13px system-ui, sans-serif;
-        width: 260px;
+        font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        color: var(--ink);
+        width: 280px;
         margin: 0;
-        padding: 14px;
+        padding: 16px;
+        background: #fbfaf7;
       }
-      label {
-        display: block;
-        margin: 0 0 4px;
-        color: #57606a;
+      .brand { display: flex; align-items: center; gap: 8px; font-weight: 650; font-size: 13px; margin-bottom: 14px; }
+      .brand .dot { width: 18px; height: 18px; border-radius: 6px; background: var(--accent); position: relative; }
+      .brand .dot::after { content: ''; position: absolute; inset: 5px 5px 7px 5px; border-radius: 2px; border: 2px solid #fff; border-bottom: 0; }
+      label { display: block; margin: 0 0 4px; color: var(--muted); font-weight: 500; }
+      input, textarea {
+        width: 100%; padding: 7px 9px; margin-bottom: 12px;
+        border: 1px solid var(--line); border-radius: 8px;
+        font: inherit; color: var(--ink); background: #fff; box-sizing: border-box;
       }
-      input,
-      textarea {
-        width: 100%;
-        padding: 6px 8px;
-        margin-bottom: 10px;
-        border: 1px solid #d0d7de;
-        border-radius: 6px;
-        font: inherit;
-        box-sizing: border-box;
-      }
-      textarea {
-        min-height: 52px;
-        resize: vertical;
-      }
+      input:focus, textarea:focus { outline: 2px solid #eaf0fc; border-color: var(--accent); }
+      textarea { min-height: 54px; resize: vertical; }
       button {
-        width: 100%;
-        padding: 9px;
-        border: 0;
-        border-radius: 6px;
-        font-weight: 600;
-        cursor: pointer;
+        width: 100%; padding: 10px; border: 0; border-radius: 8px;
+        font: 600 13.5px inherit; letter-spacing: .01em; cursor: pointer; color: #fff;
       }
-      .start { background: #1f6feb; color: #fff; }
-      .stop { background: #cf222e; color: #fff; }
-      .status { margin-top: 10px; color: #57606a; }
+      .start { background: var(--accent); }
+      .stop { background: var(--red); }
+      .status { display: flex; align-items: center; gap: 7px; margin-top: 11px; color: var(--muted); }
+      .status .led { width: 7px; height: 7px; border-radius: 50%; background: #c6cbd2; }
+      .status.live .led { background: var(--red); animation: pulse 1.2s infinite; }
+      .status.live { color: var(--red); font-weight: 600; }
+      @keyframes pulse { 50% { opacity: .35; } }
     </style>
   </head>
   <body>
-    <label for="task">Task</label>
+    <div class="brand"><span class="dot"></span>SOPWizard</div>
+
+    <label for="task">What are you about to do?</label>
     <input id="task" placeholder="e.g. Create a new client record" />
 
-    <label for="notes">What should someone know? (optional)</label>
+    <label for="notes">Anything worth knowing? (optional)</label>
     <textarea id="notes" placeholder="Systems, rules, common exceptions…"></textarea>
 
     <button id="toggle" class="start">Start recording</button>
-    <div class="status" id="status">Idle</div>
+    <div class="status" id="status"><span class="led"></span><span id="statusText">Idle</span></div>
 
     <script src="popup.js"></script>
   </body>

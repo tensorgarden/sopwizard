@@ -1,51 +1,59 @@
 # SOPWizard
 
-Record a browser workflow while you work, and turn it into a clear, structured standard operating procedure — a readable visual guide plus a clean document you can hand to a teammate or feed to an AI assistant.
+Record a browser workflow while you work, and turn it into a clear, structured standard operating procedure — a polished visual guide plus clean Word and Markdown documents you can hand to a teammate or feed to an AI assistant.
 
 ## Why
 
-Most process knowledge lives in people's heads. Writing it down is tedious, so it rarely happens. SOPWizard captures what you actually did — the pages you opened, the fields you filled, the choices you made — and drafts the SOP for you. You review, correct anything it misread, and export.
+Most process knowledge lives in people's heads. Writing it down is tedious, so it rarely happens. SOPWizard captures what you actually did — the pages you opened, the fields you filled, the choices you made — and drafts the SOP for you. You answer a couple of questions, correct anything it misread, approve, and share.
 
 ## How it works
 
 ```
-capture  →  segment  →  draft  →  export
+capture  →  segment  →  draft  →  review  →  approve  →  export
 ```
 
-1. **Record** — a Chrome extension captures the workflow as you perform it, with a keyframe at each step.
-2. **Add context** — note the task, the systems involved, and any rules or exceptions, before or after recording.
-3. **Generate** — the pipeline segments the recording into steps and drafts a clear SOP.
-4. **Review & correct** — fix any step, field, or decision; only the affected section is regenerated.
-5. **Export** — a visual HTML guide and a Markdown document (the master other formats derive from).
+1. **Record** — a Chrome extension captures the workflow as you perform it, with a screenshot at each step.
+2. **Add context** — note the task and anything worth knowing before you start; add more after.
+3. **Generate** — the pipeline segments the recording into steps and drafts the SOP, asking targeted questions instead of guessing.
+4. **Review & correct** — fix any step in plain English; only that step changes. A correction can apply to just this SOP or to all future workflows like it — those become lessons that improve the next draft.
+5. **Approve & export** — a visual guide with each step's screenshot and timestamp, plus Word and Markdown.
 
-The step that turns events into prose sits behind a small provider interface, so the model — hosted or self-managed — is a configuration choice rather than a rewrite. The default provider is deterministic and needs no network, so the pipeline runs anywhere out of the box.
+## Narration
 
-## Layout
+The step that turns events into prose sits behind a small provider interface:
 
-| Path | What |
-| --- | --- |
-| `extension/` | Chrome (MV3) recorder |
-| `server/` | Processing pipeline: ingest → segment → draft → export |
-| `docs/` | Architecture notes |
+- **Default** — a deterministic narrator that needs no network or configuration, so everything works out of the box.
+- **Model-backed** — point `LLM_URL` / `LLM_MODEL` at any chat-completions-style endpoint and drafts get natural titles, intros, and smarter questions. A local [Ollama](https://ollama.com) works as-is:
+
+  ```bash
+  ollama pull llama3.2   # then just start the server — it's detected automatically
+  ```
+
+  Small, inexpensive models are the design target: one compact request narrates the whole SOP. If the endpoint is missing or fails, the deterministic narrator takes over — generation never blocks.
+
+Recordings never capture what you type, only which fields you touched. Screenshots stay on your machine; the only thing that can reach a model is text, and it passes through a deterministic redaction gate (SSNs, emails, phone and card numbers) first.
 
 ## Getting started
 
 Requires Node 20+.
 
 ```bash
-# see the pipeline produce a SOP from the bundled sample
 cd server
-npm run demo
-
-# or run the server and post recordings to it
-npm start   # listens on :8787
+npm install
+npm start        # → http://localhost:8787
 ```
 
-Generated SOPs are written under `server/data/sops/<id>/` as `sop.md`, `sop.docx`, `index.html`, and `sop.json`. Posting a recording to `POST /recordings` returns a `review` link (`/sops/<id>/review`) where you answer the open questions and correct any step in plain language — edits apply only to the step they name.
+Open `http://localhost:8787` — the home page has the extension download and install steps. Or load `extension/` unpacked at `chrome://extensions` directly.
 
-**Extension** — open `chrome://extensions`, enable Developer mode, choose *Load unpacked*, and select the `extension/` folder. With the server running, record a workflow and stop to generate the SOP.
+To see the pipeline without recording anything: `npm run demo` (writes a sample SOP to `data/sops/sample/`).
 
-To share it, run `npm run pack:extension` to build `dist/sopwizard-extension.zip` (also downloadable from a running server at `/extension.zip`); unzip and load it unpacked.
+## Layout
+
+| Path | What |
+| --- | --- |
+| `extension/` | Chrome (MV3) recorder |
+| `server/` | Pipeline: ingest → segment → draft → review → export |
+| `docs/` | Architecture notes |
 
 ## Status
 

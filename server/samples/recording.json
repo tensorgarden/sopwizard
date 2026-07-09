@@ -1,5 +1,5 @@
 {
-  "capturedAt": 0,
+  "capturedAt": 1751980000000,
   "context": {
     "task": "Create a new client record",
     "pre": "Use this to add a client after an intake call.",
@@ -10,31 +10,41 @@
       "seq": 0,
       "type": "click",
       "url": "https://app.example.com/clients",
-      "target": { "tag": "button", "role": "button", "name": "New client", "selector": "button#new-client" }
+      "at": 1751980002000,
+      "viewport": { "w": 1440, "h": 900 },
+      "target": { "tag": "button", "role": "button", "name": "New client", "selector": "button#new-client", "rect": { "x": 1180, "y": 96, "w": 132, "h": 40 } }
     },
     {
       "seq": 1,
       "type": "change",
       "url": "https://app.example.com/clients/new",
-      "target": { "tag": "input", "role": null, "name": "Full name", "selector": "input#name" }
+      "at": 1751980011000,
+      "viewport": { "w": 1440, "h": 900 },
+      "target": { "tag": "input", "role": null, "name": "Full name", "selector": "input#name", "rect": { "x": 420, "y": 260, "w": 480, "h": 40 } }
     },
     {
       "seq": 2,
       "type": "change",
       "url": "https://app.example.com/clients/new",
-      "target": { "tag": "input", "role": null, "name": "Email", "selector": "input#email" }
+      "at": 1751980019000,
+      "viewport": { "w": 1440, "h": 900 },
+      "target": { "tag": "input", "role": null, "name": "Email", "selector": "input#email", "rect": { "x": 420, "y": 330, "w": 480, "h": 40 } }
     },
     {
       "seq": 3,
       "type": "change",
       "url": "https://app.example.com/clients/new",
-      "target": { "tag": "select", "role": null, "name": "Account type", "selector": "select#type" }
+      "at": 1751980027000,
+      "viewport": { "w": 1440, "h": 900 },
+      "target": { "tag": "select", "role": null, "name": "Account type", "selector": "select#type", "rect": { "x": 420, "y": 400, "w": 240, "h": 40 } }
     },
     {
       "seq": 4,
       "type": "submit",
       "url": "https://app.example.com/clients/new",
-      "target": { "tag": "form", "role": null, "name": "Save client", "selector": "form#client-form" }
+      "at": 1751980034000,
+      "viewport": { "w": 1440, "h": 900 },
+      "target": { "tag": "form", "role": null, "name": "Save client", "selector": "form#client-form", "rect": { "x": 420, "y": 470, "w": 140, "h": 44 } }
     }
   ]
 }

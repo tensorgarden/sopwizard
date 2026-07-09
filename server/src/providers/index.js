@@ -1,14 +1,20 @@
 // Narration providers.
 //
-// A provider implements `narrate(step) -> { title, detail }`. The default is a
-// deterministic rule set; a model-backed provider (hosted or self-managed) can
-// be added under the same interface and selected with SOP_PROVIDER, without
-// touching the rest of the pipeline.
+// A provider implements `narrate({ steps, context, lessons })` and returns
+// `{ title?, intro?, steps: [{title, detail} | null], questions? }`. The
+// model-backed provider is used when its endpoint is reachable (or when
+// SOP_PROVIDER forces a choice); otherwise the deterministic rules provider
+// keeps the pipeline working with no configuration at all.
 
 import * as rules from './rules.js';
+import * as llm from './llm.js';
 
-const providers = { rules };
+export async function getProvider() {
+  const forced = process.env.SOP_PROVIDER;
+  if (forced === 'rules') return rules;
+  if (forced === 'llm') return llm;
 
-export function getProvider(name = process.env.SOP_PROVIDER || 'rules') {
-  return providers[name] || providers.rules;
+  return (await llm.available()) ? llm : rules;
 }
+
+export { rules, llm };
