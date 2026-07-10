@@ -28,6 +28,8 @@ npm install --omit=dev --prefix "$STAGE/server" --silent
 
 echo "· staging extension"
 cp -R "$ROOT/extension" "$STAGE/extension"
+mkdir -p "$STAGE/dist"
+(cd "$STAGE" && zip -qr "dist/sopwizard-extension.zip" extension)
 
 cat > "$STAGE/Start SOPWizard.command" <<'EOF'
 #!/bin/bash

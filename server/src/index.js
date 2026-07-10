@@ -1,5 +1,6 @@
 import './env.js';
 import { createServer } from 'node:http';
+import { mkdirSync, existsSync } from 'node:fs';
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -201,9 +202,16 @@ function contentType(file) {
   return 'text/plain; charset=utf-8';
 }
 
+// Refresh the downloadable extension zip if a zip tool is available; packaged
+// builds ship the file, so a failure here is fine.
 function packExtension() {
+  try {
+    mkdirSync(join(ROOT, 'dist'), { recursive: true });
+  } catch {
+    return;
+  }
   execFile('zip', ['-qr', EXTENSION_ZIP, 'extension'], { cwd: ROOT }, (err) => {
-    if (err) console.warn('could not build extension zip:', err.message);
+    if (err && !existsSync(EXTENSION_ZIP)) console.warn('no extension zip:', err.message);
   });
 }
 
@@ -211,7 +219,7 @@ function packExtension() {
 server.requestTimeout = 0;
 
 server.listen(PORT, '127.0.0.1', () => {
-  execFile('mkdir', ['-p', join(ROOT, 'dist')], () => packExtension());
+  packExtension();
   console.log(`SOPWizard running — open http://localhost:${PORT}`);
   console.log(syncEnabled() ? 'cloud sync: on' : 'cloud sync: off (set SYNC_* in server/.env to enable)');
 });
