@@ -22,7 +22,8 @@ const css = `
   .install code { background: #f0eee7; padding: 1px 7px; border-radius: 5px; font: 13px var(--mono); }
 
   .library { margin-top: 44px; }
-  .library h2 { font: 600 17px var(--sans); margin: 0 0 14px; }
+  .library-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin: 0 0 14px; }
+  .library h2 { font: 600 17px var(--sans); margin: 0; }
   .sop-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; transition: box-shadow .12s ease; }
   .sop-row:hover { box-shadow: var(--shadow); }
   .sop-row .name { font-weight: 600; }
@@ -32,6 +33,8 @@ const css = `
 `;
 
 export function landingPage(sops = []) {
+  const approvedCount = sops.filter((s) => s.status === 'approved').length;
+
   const rows = sops.length
     ? sops
         .map(
@@ -41,7 +44,7 @@ export function landingPage(sops = []) {
             <div class="name">${esc(s.title)} <span class="badge ${s.status === 'approved' ? 'approved' : 'draft'}" style="margin-left:6px">${s.status === 'approved' ? 'Approved' : 'Draft'}</span></div>
             <div class="sub">${s.steps} steps</div>
           </div>
-          <div class="links"><a href="/sops/${s.id}/review">Review</a><a href="/sops/${s.id}">Guide</a><a href="/sops/${s.id}/sop.docx">Word</a></div>
+          <div class="links"><a href="/sops/${s.id}/review">Review</a><a href="/sops/${s.id}">Guide</a><a href="/sops/${s.id}/sop.md">Markdown</a><a href="/sops/${s.id}/sop.docx">Word</a></div>
         </div>`
         )
         .join('')
@@ -78,7 +81,10 @@ export function landingPage(sops = []) {
     </div>
 
     <div class="library">
-      <h2>Your SOPs</h2>
+      <div class="library-head">
+        <h2>Your SOPs</h2>
+        ${approvedCount ? `<a class="btn ghost" href="/export/approved.zip">Download all approved (${approvedCount}) &middot; .zip</a>` : ''}
+      </div>
       ${rows}
     </div>
 

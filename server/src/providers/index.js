@@ -1,6 +1,8 @@
-// A provider implements narrate({ steps, context, lessons }) -> { title?,
-// intro?, steps, questions? }. The model provider is used when reachable
-// (or when SOP_PROVIDER forces one); rules otherwise.
+// A provider implements narrate({ groups, context, lessons }) -> { title?,
+// intro?, phases?, steps, questions? }, and may implement sections({ sop,
+// context }) -> the reference sections. A provider without sections() produces
+// a SOP of only what the recording shows. The model provider is used when
+// reachable (or when SOP_PROVIDER forces one); rules otherwise.
 
 import * as rules from './rules.js';
 import * as llm from './llm.js';

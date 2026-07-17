@@ -1,6 +1,6 @@
 {
   "name": "@sopwizard/server",
-  "version": "0.0.0",
+  "version": "0.9.0",
   "private": true,
   "type": "module",
   "description": "Processing pipeline: ingest recordings, segment into steps, draft SOPs.",
@@ -8,7 +8,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "demo": "node src/demo.js"
+    "demo": "node src/demo.js",
+    "test": "node --test"
   },
   "engines": {
     "node": ">=20"

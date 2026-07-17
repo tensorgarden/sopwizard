@@ -19,3 +19,18 @@ export function hostOf(url) {
     return url;
   }
 }
+
+// Filename-safe slug from an SOP title, so a download is
+// "create-a-new-client-record.md" instead of an opaque "sop.md".
+export function slug(text, fallback = 'sop') {
+  const out = String(text || '')
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 60)
+    .replace(/-$/, '');
+  return out || fallback;
+}

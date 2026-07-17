@@ -6,17 +6,27 @@
 set -euo pipefail
 
 ARCH="${1:-arm64}"
-NODE_VERSION="v22.14.0"
+NODE_VERSION="${NODE_VERSION:-v22.18.0}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 STAGE="$ROOT/dist/SOPWizard"
-ZIP="$ROOT/dist/SOPWizard-mac-$ARCH.zip"
+# The download page names the Intel build "mac-intel"; Node names the same
+# architecture "x64". Keep both straight.
+LABEL="$ARCH"
+[ "$ARCH" = "x64" ] && LABEL="intel"
+ZIP="$ROOT/dist/SOPWizard-mac-$LABEL.zip"
 
 rm -rf "$STAGE" "$ZIP"
 mkdir -p "$STAGE/runtime"
 
 echo "· fetching Node $NODE_VERSION ($ARCH)"
-curl -fsSL "https://nodejs.org/dist/$NODE_VERSION/node-$NODE_VERSION-darwin-$ARCH.tar.gz" \
-  | tar -xz -C "$STAGE/runtime" --strip-components=2 "node-$NODE_VERSION-darwin-$ARCH/bin/node"
+TARBALL="node-$NODE_VERSION-darwin-$ARCH.tar.gz"
+TMP="$(mktemp -d)"
+curl -fsSL "https://nodejs.org/dist/$NODE_VERSION/$TARBALL" -o "$TMP/$TARBALL"
+# Verify against the official checksums before we trust the binary.
+curl -fsSL "https://nodejs.org/dist/$NODE_VERSION/SHASUMS256.txt" -o "$TMP/SHASUMS256.txt"
+(cd "$TMP" && grep " $TARBALL\$" SHASUMS256.txt | shasum -a 256 -c -)
+tar -xz -C "$STAGE/runtime" --strip-components=2 -f "$TMP/$TARBALL" "node-$NODE_VERSION-darwin-$ARCH/bin/node"
+rm -rf "$TMP"
 
 echo "· staging server"
 mkdir -p "$STAGE/server"

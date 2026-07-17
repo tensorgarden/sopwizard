@@ -1,5 +1,9 @@
 // Open questions for a drafted SOP: whatever the narrator flagged, plus
 // deterministic checks. A null stepIndex means the SOP as a whole.
+//
+// These cover what the recording couldn't capture. Guidance the narrator wrote
+// is a separate gate (see unverifiedGuidance() in model.js): a question needs
+// an answer, guidance needs a person to keep or remove existing text.
 
 export function review(sop) {
   const questions = [];
@@ -22,12 +26,17 @@ export function review(sop) {
 
   for (const step of sop.steps) {
     if (step.clarified || step.corrected) continue;
-    const target = step.target;
 
-    if (step.action === 'change' && target?.tag === 'select') {
-      add(step.index, `Which option did you choose for "${target.name || 'this dropdown'}", and when would you pick a different one?`);
-    } else if ((step.action === 'click' || step.action === 'submit') && !target?.name) {
-      add(step.index, `Step ${step.index}: this control has no clear label — what is it, and what does it do?`);
+    // A step can cover several recorded actions now, so the checks run over the
+    // evidence rather than the step's representative action.
+    for (const action of step.evidence || []) {
+      const target = action.target;
+
+      if (action.action === 'change' && target?.tag === 'select') {
+        add(step.index, `Which option did you choose for "${target.name || 'this dropdown'}", and when would you pick a different one?`);
+      } else if ((action.action === 'click' || action.action === 'submit') && !target?.name) {
+        add(step.index, `Step ${step.index}: one of the controls here has no clear label — what is it, and what does it do?`);
+      }
     }
   }
 

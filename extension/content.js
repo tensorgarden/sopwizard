@@ -65,17 +65,32 @@ function cssPath(el) {
 
 function capture(type, event) {
   if (!recording) return;
-  chrome.runtime.sendMessage({
-    kind: 'event',
-    event: {
-      seq: sequence++,
-      type,
-      url: location.href,
-      at: Date.now(),
-      viewport: { w: window.innerWidth, h: window.innerHeight },
-      target: describeTarget(event.target),
-    },
-  });
+  try {
+    chrome.runtime.sendMessage({
+      kind: 'event',
+      event: {
+        seq: sequence++,
+        type,
+        url: location.href,
+        at: Date.now(),
+        viewport: { w: window.innerWidth, h: window.innerHeight },
+        target: describeTarget(event.target),
+      },
+    });
+  } catch {
+    // The extension was reloaded or updated and this content script is now
+    // orphaned ("Extension context invalidated"). Stop rather than throw on
+    // every click and leave a stuck REC pill; a page refresh reconnects.
+    teardown();
+  }
+}
+
+function teardown() {
+  recording = false;
+  showIndicator(false);
+  for (const [type, handler] of Object.entries(handlers)) {
+    document.removeEventListener(type, handler, true);
+  }
 }
 
 const handlers = {
@@ -87,6 +102,9 @@ const handlers = {
 let indicator = null;
 
 function showIndicator(on) {
+  // The recorder runs in every frame so iframe clicks are captured, but the
+  // banner belongs only to the top document.
+  if (window !== window.top) return;
   if (on && !indicator) {
     indicator = document.createElement('div');
     indicator.textContent = 'REC · SOPWizard is capturing this page';

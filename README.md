@@ -9,12 +9,12 @@ Most process knowledge lives in people's heads. Writing it down is tedious, so i
 ## How it works
 
 ```
-capture  →  segment  →  draft  →  review  →  approve  →  export
+capture  →  segment  →  consolidate  →  draft  →  review  →  approve  →  export
 ```
 
-1. **Record** — a Chrome extension captures the workflow as you perform it, with a screenshot at each step.
+1. **Record** — a Chrome extension captures the workflow as you perform it, with a screenshot at each step. It records only the tab you started in.
 2. **Add context** — note the task and anything worth knowing before you start; add more after.
-3. **Generate** — the pipeline segments the recording into steps and drafts the SOP, asking targeted questions instead of guessing.
+3. **Generate** — the pipeline groups the recording into the handful of steps the work actually consisted of and drafts the SOP, asking targeted questions instead of guessing.
 4. **Review & correct** — fix any step in plain English; only that step changes. A correction can apply to just this SOP or to all future workflows like it — those become lessons that improve the next draft.
 5. **Approve & export** — a visual guide with each step's screenshot and timestamp, plus Word and Markdown.
 
@@ -31,7 +31,7 @@ The step that turns events into prose sits behind a small provider interface:
 
   Small, inexpensive models are the design target: one compact request narrates the whole SOP. If the endpoint is missing or fails, the deterministic narrator takes over — generation never blocks.
 
-Recordings never capture what you type, only which fields you touched. Screenshots stay on your machine; the only thing that can reach a model is text, and it passes through a deterministic redaction gate (SSNs, emails, phone and card numbers) first.
+Recordings never capture what you type, only which fields you touched. Screenshots stay on your machine; the only thing that can reach a model is text, and it passes through a deterministic redaction gate — Social Security, card, account and policy numbers, employer identification numbers, street addresses, emails, and phone numbers — first. A person reviews and approves every SOP before it is saved or shared.
 
 ## Getting started
 
@@ -45,16 +45,22 @@ npm start        # → http://localhost:8787
 
 Open `http://localhost:8787` — the home page has the extension download and install steps. Or load `extension/` unpacked at `chrome://extensions` directly.
 
-To see the pipeline without recording anything: `npm run demo` (writes a sample SOP to `data/sops/sample/`).
+To see the pipeline without recording anything: `npm run demo`.
+
+Run the tests with `npm test --workspace @sopwizard/server`.
+
+## Where data lives
+
+SOPs, the usage ledger, and lessons are stored outside the application folder, in your OS user-data directory (`~/Library/Application Support/SOPWizard` on macOS, `%APPDATA%\SOPWizard` on Windows, `~/.local/share/SOPWizard` on Linux) — so replacing the app with a new build never deletes your SOPs. A `data/` folder left over from an earlier version is migrated automatically on first run. Set `SOPWIZARD_DATA_DIR` to choose a different location.
 
 ## Layout
 
 | Path | What |
 | --- | --- |
 | `extension/` | Chrome (MV3) recorder |
-| `server/` | Pipeline: ingest → segment → draft → review → export |
-| `docs/` | Architecture notes |
+| `server/` | Pipeline: ingest → segment → consolidate → draft → review → export |
+| `docs/` | Architecture and technical notes |
 
 ## Status
 
-Early development. SOPWizard is an [Uncovered](https://uncoveredapp.com) product.
+Pilot-ready. SOPWizard is an [Uncovered](https://uncoveredapp.com) product.
