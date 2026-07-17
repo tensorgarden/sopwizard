@@ -53,12 +53,14 @@ export const theme = `
   .badge.approved { background: var(--approve-soft); color: var(--approve); }
   .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
-  .steps { list-style: none; margin: 44px 0 0; padding: 0; counter-reset: step; }
+  .steps { list-style: none; margin: 44px 0 0; padding: 0; }
   .step {
     position: relative; padding: 0 0 40px 56px;
   }
+  /* The number is the step's own index, not a CSS counter — steps are split
+     across one list per phase, and a counter would restart at each one. */
   .step::before {
-    counter-increment: step; content: counter(step);
+    content: attr(data-n);
     position: absolute; left: 0; top: 0;
     width: 34px; height: 34px; border-radius: 50%;
     background: var(--ink); color: #fff;
@@ -82,6 +84,47 @@ export const theme = `
   .notes h2 { margin: 0 0 8px; font: 600 15px var(--sans); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
   .notes p { margin: 0; color: #3b4554; white-space: pre-line; }
 
+  /* ---- document facts: system, workflow, audience, sensitivity ---- */
+  .facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; margin: 26px 0 0; padding: 18px 22px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; font-size: 14px; }
+  .facts dt { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; padding-top: 2px; }
+  .facts dd { margin: 0; color: #3b4554; overflow-wrap: anywhere; }
+
+  /* ---- phases: the stages a reader navigates by ---- */
+  .phase { margin: 52px 0 4px; padding-top: 22px; border-top: 1px solid var(--line); }
+  .phase:first-of-type { border-top: 0; padding-top: 0; }
+  .phase .tag { display: inline-block; font: 600 11px var(--sans); text-transform: uppercase; letter-spacing: .1em; color: var(--accent); background: var(--accent-soft); padding: 4px 9px; border-radius: 5px; }
+  .phase h2 { margin: 10px 0 4px; font: 600 23px/1.25 var(--serif); letter-spacing: -0.01em; }
+  .phase .summary { margin: 0; color: var(--muted); max-width: 62ch; }
+
+  /* ---- guidance: everything the recording can't show ---- */
+  .guidance { margin: 12px 0 14px; padding: 14px 18px; background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; display: grid; gap: 9px; max-width: 62ch; }
+  .guidance .row { display: grid; gap: 2px; }
+  .guidance .k { font: 600 11.5px var(--sans); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .guidance .v { color: #3b4554; }
+  .guidance.unverified { border-left-color: var(--amber); background: var(--amber-soft); }
+  .unverified-note { display: inline-flex; align-items: center; gap: 6px; font: 600 11.5px var(--sans); color: var(--amber); text-transform: uppercase; letter-spacing: .05em; }
+  .flag { display: inline-block; margin-right: 6px; color: var(--amber); font-weight: 700; }
+
+  /* ---- reference tables ---- */
+  .ref { margin: 12px 0 0; width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  .ref caption { text-align: left; color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+  .ref th { text-align: left; font: 600 11.5px var(--sans); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 0 14px 8px 0; border-bottom: 1px solid var(--line); }
+  .ref td { padding: 11px 14px 11px 0; border-bottom: 1px solid var(--line); color: #3b4554; vertical-align: top; overflow-wrap: anywhere; }
+  .ref tr:last-child td { border-bottom: 0; }
+  .ref td:first-child { color: var(--ink); font-weight: 500; }
+
+  /* ---- checklist and open questions ---- */
+  .checklist { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
+  .checklist li { display: grid; grid-template-columns: auto 1fr; gap: 11px; align-items: start; color: #3b4554; }
+  .checklist .box { width: 15px; height: 15px; margin-top: 4px; border: 1.5px solid var(--faint); border-radius: 4px; }
+  .questions { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
+  .questions li { padding-left: 16px; border-left: 2px solid var(--amber); color: #3b4554; }
+  .questions .where { color: var(--muted); font-size: 13px; }
+
+  .section { margin-top: 48px; }
+  .section > h2 { margin: 0 0 4px; font: 600 15px var(--sans); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .section > .lead { margin: 0; color: var(--muted); font-size: 14px; }
+
   .footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--line); display: flex; gap: 16px; align-items: center; font-size: 13px; color: var(--muted); }
 
   button, .btn {
@@ -100,13 +143,26 @@ export const theme = `
   }
   input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
 
+  /* Printing produces the circulated PDF, so these print rules are part of the output. */
   @media print {
-    body { background: #fff; }
+    @page { margin: 18mm 16mm; }
+    body { background: #fff; font-size: 11pt; }
     .page { padding: 0; max-width: none; }
-    .masthead, .footer .actions, button { display: none !important; }
+    .masthead, .footer .actions, button, .clarify, .approve-bar, details.correct { display: none !important; }
     .shot { box-shadow: none; }
-    .step { break-inside: avoid; }
-    .step::before, .badge, .how .n { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    /* Keep each self-contained block from breaking across a page. */
+    .step, .guidance, .facts, .checklist li, .questions li, .ref tr { break-inside: avoid; }
+    .phase, .section { break-inside: auto; }
+    .phase h2, .section > h2 { break-after: avoid; }
+    .step h3 { break-after: avoid; }
+    .phase { break-before: page; }
+    .phase:first-of-type { break-before: auto; }
+
+    .step::before, .badge, .phase .tag, .guidance, .unverified-note, .flag {
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    a { color: inherit; text-decoration: none; }
   }
 `;
 
@@ -116,6 +172,7 @@ export function shell({ title, body, extraCss = '', script = '' }) {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'self'" />
     <title>${title}</title>
     <style>${theme}${extraCss}</style>
   </head>

@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-NODE_VERSION="v22.14.0"
+NODE_VERSION="${NODE_VERSION:-v22.18.0}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 STAGE="$ROOT/dist/SOPWizard"
 ZIP="$ROOT/dist/SOPWizard-windows-x64.zip"
@@ -15,8 +15,12 @@ rm -rf "$STAGE" "$ZIP"
 mkdir -p "$STAGE/runtime" "$STAGE/dist"
 
 echo "· fetching Node $NODE_VERSION (win-x64)"
-curl -fsSL "https://nodejs.org/dist/$NODE_VERSION/node-$NODE_VERSION-win-x64.zip" -o "$TMP/node.zip"
-unzip -q "$TMP/node.zip" -d "$TMP"
+WINZIP="node-$NODE_VERSION-win-x64.zip"
+curl -fsSL "https://nodejs.org/dist/$NODE_VERSION/$WINZIP" -o "$TMP/$WINZIP"
+# Verify against the official checksums before we trust the binary.
+curl -fsSL "https://nodejs.org/dist/$NODE_VERSION/SHASUMS256.txt" -o "$TMP/SHASUMS256.txt"
+(cd "$TMP" && grep " $WINZIP\$" SHASUMS256.txt | shasum -a 256 -c -)
+unzip -q "$TMP/$WINZIP" -d "$TMP"
 cp "$TMP/node-$NODE_VERSION-win-x64/node.exe" "$STAGE/runtime/node.exe"
 
 echo "· staging server"
