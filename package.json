@@ -1,6 +1,6 @@
 {
   "name": "sopwizard",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "private": true,
   "description": "Record a browser workflow and generate a clean, structured SOP.",
   "scripts": {

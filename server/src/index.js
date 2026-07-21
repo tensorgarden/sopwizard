@@ -8,6 +8,7 @@ import { homedir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { run } from './pipeline.js';
+import { getProvider } from './providers/index.js';
 import { review } from './review.js';
 import { applyAnswers, applyCorrection, applyGuidance, approve } from './revise.js';
 import { persist, load, loadMeta, getArtifact, migrateLegacyData, DATA_DIR } from './store.js';
@@ -122,7 +123,7 @@ async function handle(req, res) {
   const parts = pathname.split('/').filter(Boolean);
 
   if (req.method === 'GET' && pathname === '/') {
-    return sendHtml(res, landingPage(await listSops()));
+    return sendHtml(res, landingPage(await listSops(), { basicMode: !(await modelReady()) }));
   }
   if (req.method === 'GET' && pathname === '/practice') {
     return sendHtml(res, practicePage());
@@ -260,6 +261,18 @@ async function alreadyProcessed(id) {
   } catch {
     return false;
   }
+}
+
+// Whether a model is reachable, cached briefly so the landing page and the
+// startup banner don't probe the network on every hit. When false, SOPs are the
+// deterministic click-log fallback rather than the full procedure.
+let modelCheck = { at: 0, ready: false };
+async function modelReady() {
+  const now = Date.now();
+  if (now - modelCheck.at < 15000) return modelCheck.ready;
+  const provider = await getProvider();
+  modelCheck = { at: now, ready: provider.name !== 'rules' };
+  return modelCheck.ready;
 }
 
 async function listSops() {
@@ -428,4 +441,11 @@ server.listen(PORT, '127.0.0.1', () => {
       : 'shared corpus: off'
   );
   if (webhookEnabled()) logLine('approval webhook: on');
+  modelReady().then((ready) =>
+    logLine(
+      ready
+        ? 'model narration: on — full SOPs (phases, decisions, guidance)'
+        : 'model narration: OFF — SOPs will be basic (recorded steps only). Set LLM_URL in server/.env for the full procedure.'
+    )
+  );
 });

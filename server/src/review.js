@@ -16,6 +16,7 @@ export function review(sop) {
     }
   };
 
+  // The narrator's own questions are targeted and few.
   for (const q of sop.suggestedQuestions || []) {
     if (q.answered) continue;
     const step = q.stepIndex != null ? sop.steps.find((s) => s.index === q.stepIndex) : null;
@@ -24,20 +25,34 @@ export function review(sop) {
     add(q.stepIndex ?? null, q.text);
   }
 
+  // Deterministic checks, kept few on purpose: a long recording has many
+  // dropdowns and unlabeled controls, and one question apiece would bury the
+  // reviewer. Dropdowns are capped; unlabeled controls collapse into one.
+  const DROPDOWN_LIMIT = 4;
+  const unlabeled = [];
+  let dropdowns = 0;
+
   for (const step of sop.steps) {
     if (step.clarified || step.corrected) continue;
-
-    // A step can cover several recorded actions now, so the checks run over the
-    // evidence rather than the step's representative action.
     for (const action of step.evidence || []) {
       const target = action.target;
-
       if (action.action === 'change' && target?.tag === 'select') {
-        add(step.index, `Which option did you choose for "${target.name || 'this dropdown'}", and when would you pick a different one?`);
+        if (dropdowns < DROPDOWN_LIMIT) {
+          add(step.index, `Which option did you choose for "${target.name || 'this dropdown'}", and when would you pick a different one?`);
+          dropdowns += 1;
+        }
       } else if ((action.action === 'click' || action.action === 'submit') && !target?.name) {
-        add(step.index, `Step ${step.index}: one of the controls here has no clear label — what is it, and what does it do?`);
+        unlabeled.push(step.index);
       }
     }
+  }
+
+  if (unlabeled.length) {
+    const shown = unlabeled.slice(0, 8).join(', ');
+    add(
+      null,
+      `A few steps (${shown}${unlabeled.length > 8 ? ', and more' : ''}) act on controls with no clear label — can you say what they do?`
+    );
   }
 
   if (!sop.context.post) {

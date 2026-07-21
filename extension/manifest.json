@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SOPWizard Recorder",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "Record a browser workflow and turn it into a standard operating procedure.",
   "permissions": ["activeTab", "tabs", "storage", "unlimitedStorage", "alarms", "notifications"],
   "host_permissions": ["<all_urls>"],
