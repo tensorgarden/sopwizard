@@ -2,20 +2,25 @@
 
 export const theme = `
   :root {
-    --paper: #f6f5f0;
+    --paper: #ffffff;
     --card: #ffffff;
-    --ink: #17202e;
-    --muted: #626c7a;
-    --faint: #9aa2ae;
-    --line: #e5e2d9;
-    --accent: #2b59c3;
-    --accent-soft: #eaf0fc;
-    --approve: #11734f;
-    --approve-soft: #e7f4ee;
-    --amber: #8a5f1b;
-    --amber-soft: #fdf3e0;
-    --shadow: 0 1px 2px rgba(23, 32, 46, 0.05), 0 12px 32px rgba(23, 32, 46, 0.07);
-    --serif: Charter, Georgia, Cambria, "Times New Roman", serif;
+    --panel: #f8f6f2;
+    --ink: #2d2d2d;
+    --muted: #5a5a5a;
+    --faint: #8a857c;
+    --line: #d9d5ce;
+    --line-soft: #e8e4dc;
+    --accent: #2d5a3d;
+    --accent-deep: #1a3d28;
+    --accent-soft: #e8f0e9;
+    --accent-muted: #c4d6c7;
+    --approve: #3b7850;
+    --approve-soft: #e8f0e9;
+    --amber: #7a6930;
+    --amber-soft: #fef9f0;
+    --amber-line: #c9a84c;
+    --shadow: 0 1px 2px rgba(45, 45, 45, 0.04), 0 10px 28px rgba(45, 45, 45, 0.06);
+    --serif: "Book Antiqua", "Palatino Linotype", Palatino, "Iowan Old Style", Georgia, "Times New Roman", serif;
     --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
   }
@@ -24,7 +29,7 @@ export const theme = `
     margin: 0;
     background: var(--paper);
     color: var(--ink);
-    font: 16px/1.6 var(--sans);
+    font: 15.5px/1.7 var(--serif);
     -webkit-font-smoothing: antialiased;
   }
   a { color: var(--accent); text-decoration: none; }
@@ -42,11 +47,11 @@ export const theme = `
   .wordmark .dot { width: 22px; height: 22px; border-radius: 7px; background: var(--accent); position: relative; }
   .wordmark .dot::after { content: ''; position: absolute; inset: 6px 6px 9px 6px; border-radius: 2px; border: 2px solid #fff; border-bottom: 0; }
 
-  .doc-title { font: 600 34px/1.2 var(--serif); letter-spacing: -0.01em; margin: 0 0 10px; }
+  .doc-title { font: 700 28px/1.25 var(--serif); color: var(--accent); letter-spacing: -0.3px; margin: 0 0 8px; }
   .doc-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; color: var(--muted); font-size: 13.5px; margin-bottom: 8px; }
   .doc-meta span { min-width: 0; overflow-wrap: anywhere; }
   .doc-meta .sep { color: var(--line); }
-  .intro { font: 400 17px/1.65 var(--serif); color: #333e4e; max-width: 62ch; margin: 18px 0 0; }
+  .intro { font: 400 16.5px/1.7 var(--serif); color: var(--ink); max-width: 64ch; margin: 16px 0 0; }
 
   .badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: .02em; }
   .badge.draft { background: var(--amber-soft); color: var(--amber); }
@@ -61,39 +66,46 @@ export const theme = `
      across one list per phase, and a counter would restart at each one. */
   .step::before {
     content: attr(data-n);
-    position: absolute; left: 0; top: 0;
-    width: 34px; height: 34px; border-radius: 50%;
-    background: var(--ink); color: #fff;
-    font: 600 14px/34px var(--sans); text-align: center;
+    position: absolute; left: 0; top: 1px;
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid var(--accent); background: #fff; color: var(--accent);
+    font: 700 13.5px/26px var(--serif); text-align: center;
   }
   .step::after {
-    content: ''; position: absolute; left: 16.5px; top: 42px; bottom: 8px;
+    content: ''; position: absolute; left: 15px; top: 38px; bottom: 8px;
     width: 1px; background: var(--line);
   }
   .step:last-child::after { display: none; }
-  .step h3 { margin: 4px 0 6px; font: 600 19px/1.35 var(--sans); letter-spacing: -0.005em; }
-  .step .detail { margin: 0 0 14px; color: #3b4554; max-width: 60ch; overflow-wrap: anywhere; }
-  .step .evidence { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; font: 500 11.5px var(--mono); color: var(--muted); background: #f0eee7; padding: 2px 8px; border-radius: 5px; vertical-align: 2px; }
+  .step h3 { margin: 2px 0 6px; font: 700 17px/1.35 var(--serif); color: var(--ink); letter-spacing: 0; }
+  .step .detail { margin: 0 0 14px; color: var(--ink); max-width: 62ch; overflow-wrap: anywhere; }
+  .step .evidence { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; font: 500 11.5px var(--mono); color: var(--muted); background: var(--panel); padding: 2px 8px; border-radius: 5px; vertical-align: 2px; }
   .step .edited-flag { margin-left: 8px; font-size: 12px; color: var(--approve); font-weight: 600; }
 
-  .shot { position: relative; display: block; max-width: 100%; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  /* Screenshots support the prose rather than dominate it — the reference is
+     text-first, so keyframes are kept modest and secondary. */
+  .shot { position: relative; display: block; max-width: 440px; border-radius: 6px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--line); margin-top: 4px; }
   .shot img { display: block; width: 100%; }
-  .hl { position: absolute; border: 2.5px solid var(--accent); border-radius: 6px; box-shadow: 0 0 0 4px rgba(43, 89, 195, 0.22), 0 0 0 2000px rgba(23, 32, 46, 0.06); pointer-events: none; }
+  .hl { position: absolute; border: 2.5px solid var(--accent); border-radius: 5px; box-shadow: 0 0 0 4px rgba(45, 90, 61, 0.20), 0 0 0 2000px rgba(45, 45, 45, 0.05); pointer-events: none; }
 
-  .notes { margin-top: 12px; padding: 20px 24px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
-  .notes h2 { margin: 0 0 8px; font: 600 15px var(--sans); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
-  .notes p { margin: 0; color: #3b4554; white-space: pre-line; }
+  .notes { margin-top: 32px; padding: 18px 22px; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; }
+  .notes h2 { margin: 0 0 8px; font: 700 15px var(--sans); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .notes p { margin: 0; color: var(--ink); white-space: pre-line; }
 
-  /* ---- document facts: system, workflow, audience, sensitivity ---- */
-  .facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; margin: 26px 0 0; padding: 18px 22px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; font-size: 14px; }
-  .facts dt { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; padding-top: 2px; }
-  .facts dd { margin: 0; color: #3b4554; overflow-wrap: anywhere; }
+  /* Shown only when a SOP was narrated without a model — a plain click log. */
+  .basic-note { margin: 22px 0 0; padding: 12px 16px; background: var(--amber-soft); border: 1px solid var(--amber-line); border-left: 3px solid var(--amber-line); border-radius: 3px; font-size: 13.5px; color: #5c4a1f; }
+  .basic-note code { font: 12.5px var(--mono); background: #fff; padding: 1px 5px; border-radius: 4px; }
+
+  /* ---- document facts: system, workflow, audience, sensitivity — a metadata
+     panel that opens the document, like the reference SOP's header ---- */
+  .facts { display: grid; grid-template-columns: 150px 1fr; gap: 5px 18px; margin: 22px 0 0; padding: 20px 24px; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; font-size: 14px; }
+  .facts dt { color: var(--muted); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; padding-top: 1px; }
+  .facts dd { margin: 0; color: var(--ink); overflow-wrap: anywhere; }
 
   /* ---- phases: the stages a reader navigates by ---- */
-  .phase { margin: 52px 0 4px; padding-top: 22px; border-top: 1px solid var(--line); }
+  .phase { margin: 46px 0 6px; padding-top: 18px; border-top: 1px solid var(--line); }
   .phase:first-of-type { border-top: 0; padding-top: 0; }
-  .phase .tag { display: inline-block; font: 600 11px var(--sans); text-transform: uppercase; letter-spacing: .1em; color: var(--accent); background: var(--accent-soft); padding: 4px 9px; border-radius: 5px; }
-  .phase h2 { margin: 10px 0 4px; font: 600 23px/1.25 var(--serif); letter-spacing: -0.01em; }
+  .phase .tag { display: inline-block; font: 700 11px var(--sans); text-transform: uppercase; letter-spacing: .1em; color: var(--accent); }
+  .phase h2 { margin: 5px 0 4px; font: 700 21px/1.25 var(--serif); color: var(--accent); letter-spacing: -0.3px; }
   .phase .summary { margin: 0; color: var(--muted); max-width: 62ch; }
 
   /* ---- guidance: everything the recording can't show ---- */
@@ -106,12 +118,12 @@ export const theme = `
   .flag { display: inline-block; margin-right: 6px; color: var(--amber); font-weight: 700; }
 
   /* ---- reference tables ---- */
-  .ref { margin: 12px 0 0; width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  .ref { margin: 12px 0 0; width: 100%; border-collapse: collapse; font-size: 14px; }
   .ref caption { text-align: left; color: var(--muted); font-size: 13px; margin-bottom: 10px; }
-  .ref th { text-align: left; font: 600 11.5px var(--sans); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 0 14px 8px 0; border-bottom: 1px solid var(--line); }
-  .ref td { padding: 11px 14px 11px 0; border-bottom: 1px solid var(--line); color: #3b4554; vertical-align: top; overflow-wrap: anywhere; }
-  .ref tr:last-child td { border-bottom: 0; }
-  .ref td:first-child { color: var(--ink); font-weight: 500; }
+  .ref th { text-align: left; font: 700 11px var(--sans); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 8px 14px; background: var(--panel); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .ref td { padding: 10px 14px; border-bottom: 1px solid var(--line-soft); color: var(--ink); vertical-align: top; overflow-wrap: anywhere; }
+  .ref tbody tr:nth-child(even) { background: #faf8f5; }
+  .ref td:first-child { font-weight: 700; }
 
   /* ---- checklist and open questions ---- */
   .checklist { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
@@ -121,9 +133,9 @@ export const theme = `
   .questions li { padding-left: 16px; border-left: 2px solid var(--amber); color: #3b4554; }
   .questions .where { color: var(--muted); font-size: 13px; }
 
-  .section { margin-top: 48px; }
-  .section > h2 { margin: 0 0 4px; font: 600 15px var(--sans); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
-  .section > .lead { margin: 0; color: var(--muted); font-size: 14px; }
+  .section { margin-top: 40px; }
+  .section > h2 { margin: 0 0 6px; font: 700 20px var(--serif); color: var(--accent); padding-top: 16px; border-top: 1.5px solid var(--accent-muted); letter-spacing: -0.2px; }
+  .section > .lead { margin: 0 0 4px; color: var(--muted); font-size: 14px; }
 
   .footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--line); display: flex; gap: 16px; align-items: center; font-size: 13px; color: var(--muted); }
 

@@ -59,9 +59,17 @@ cat > "$STAGE/README.txt" <<'EOF'
 SOPWizard
 =========
 
+SOPWizard has two parts, and BOTH must be running when you record:
+  - the app (the small window this launcher opens), and
+  - the Chrome recorder extension.
+Keep the app window open the whole time. If it is closed, the
+recorder still captures your steps, but it cannot turn them into
+an SOP until the app is running again.
+
 1. Right-click "Start SOPWizard.command" and choose Open
    (first time only; after that, double-click works).
-   Your browser opens the SOPWizard home page.
+   Your browser opens the SOPWizard home page. Leave the small
+   window it opened running.
 
 2. Install the recorder (one time):
    - In Chrome, go to  chrome://extensions
@@ -73,7 +81,12 @@ SOPWizard
 3. Try it: the home page has a practice page made for your
    first recording.
 
-Keep the small terminal window open while you use SOPWizard.
+If you see "the SOPWizard server is not reachable at
+localhost:8787":
+  - The app is not running. Start it (step 1) and keep its
+    window open.
+  - Then open the extension and click "Send last recording".
+    Your recording is saved -- nothing is lost.
 EOF
 
 echo "· zipping"

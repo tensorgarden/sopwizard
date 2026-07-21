@@ -54,10 +54,18 @@ pause
 readme = """SOPWizard
 =========
 
+SOPWizard has two parts, and BOTH must be running when you record:
+  - the app (the small black window this launcher opens), and
+  - the Chrome recorder extension.
+Keep the app window open the whole time. If it is closed, the
+recorder still captures your steps, but it cannot turn them into
+an SOP until the app is running again.
+
 1. Double-click "Start SOPWizard.cmd".
    If Windows shows "Windows protected your PC", click
    "More info" and then "Run anyway" (first time only).
-   Your browser opens the SOPWizard home page.
+   Your browser opens the SOPWizard home page. Leave the small
+   black window it opened running.
 
 2. Install the recorder (one time):
    - In Chrome, go to  chrome://extensions
@@ -69,7 +77,12 @@ readme = """SOPWizard
 3. Try it: the home page has a practice page made for your
    first recording.
 
-Keep the small black window open while you use SOPWizard.
+If you see "the SOPWizard server is not reachable at
+localhost:8787":
+  - The app is not running. Start it (step 1) and keep its
+    window open.
+  - Then open the extension and click "Send last recording".
+    Your recording is saved -- nothing is lost.
 """
 
 for name, text in (("Start SOPWizard.cmd", launcher), ("README.txt", readme)):

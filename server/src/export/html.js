@@ -2,12 +2,14 @@
 // acted-on element highlighted, and the reference material around them.
 // Printable — this is the file that becomes the circulated PDF.
 
-import { shell, masthead, brandline } from './theme.js';
-import { escapeHtml as esc, mmss, hostOf } from './format.js';
+import { shell, brandline } from './theme.js';
+import { escapeHtml as esc, mmss } from './format.js';
 
 export function toHtml(sop) {
+  // The generated SOP is the agency's own document, so it leads with the
+  // procedure — a title, a metadata header, and the steps — not a vendor
+  // masthead. The reference material follows.
   const body = `
-    ${masthead(sop.source.url ? `Recorded in ${esc(hostOf(sop.source.url))}` : '')}
     <span class="badge ${sop.status === 'approved' ? 'approved' : 'draft'}">${sop.status === 'approved' ? 'Approved' : 'Draft'}</span>
     <h1 class="doc-title">${esc(sop.title)}</h1>
     <div class="doc-meta">
@@ -16,6 +18,7 @@ export function toHtml(sop) {
     </div>
     ${sop.intro ? `<p class="intro">${esc(sop.intro)}</p>` : ''}
     ${facts(sop)}
+    ${basicNote(sop)}
     ${prerequisites(sop)}
     ${phases(sop)}
     ${sop.context.post ? `<div class="notes"><h2>Notes &amp; exceptions</h2><p>${esc(sop.context.post)}</p></div>` : ''}
@@ -27,6 +30,16 @@ export function toHtml(sop) {
   `;
 
   return shell({ title: esc(sop.title), body });
+}
+
+// A recording narrated without a model is a plain click log — no phases, no
+// prerequisites, no decision table. Say so on the document rather than let it be
+// mistaken for the full output.
+function basicNote(sop) {
+  if (sop.narrator !== 'rules') return '';
+  return `<div class="basic-note">This SOP was generated without a language model, so it lists the recorded
+    steps without phases, prerequisites, decision tables, or guidance. Connect a model (see the server's
+    <code>.env.example</code>) to produce the full procedure.</div>`;
 }
 
 function facts(sop) {

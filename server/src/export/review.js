@@ -30,7 +30,8 @@ const css = `
 
   .gate { background: var(--amber-soft); border: 1px solid #e8d5a8; border-radius: 14px; padding: 22px 24px; margin: 28px 0 6px; }
   .gate h2 { margin: 0 0 4px; font: 600 17px var(--sans); color: var(--amber); }
-  .gate .hint { margin: 0 0 18px; color: #6f5a20; font-size: 13.5px; max-width: 66ch; }
+  .gate .hint { margin: 0 0 14px; color: #6f5a20; font-size: 13.5px; max-width: 66ch; }
+  .gate-actions { display: flex; gap: 8px; margin: 0 0 6px; }
   .claim { padding: 14px 0; border-top: 1px solid #e8d5a8; display: grid; gap: 8px; }
   .claim .where { font: 600 12px var(--sans); text-transform: uppercase; letter-spacing: .05em; color: var(--amber); }
   .claim .text { color: #3b4554; max-width: 66ch; }
@@ -75,7 +76,7 @@ export function reviewPage(id, sop, clarifications = []) {
     <div class="doc-meta"><span>${sop.steps.length} ${sop.steps.length === 1 ? 'step' : 'steps'}</span><span class="sep">·</span><a href="/sops/${id}">Visual guide</a><span class="sep">·</span><a href="/sops/${id}/sop.md">Markdown</a><span class="sep">·</span><a href="/sops/${id}/sop.docx">Word</a></div>
     ${sop.intro ? `<p class="intro">${esc(sop.intro)}</p>` : ''}
     ${gate(pending)}
-    ${!approved && clarifications.length ? `<section class="clarify"><h2>A few questions before this is finished</h2><p class="hint">Answers are folded into the exact step they belong to — nothing else is touched.</p>${questions}<button type="button" onclick="submitAnswers(this)">Save answers</button><div class="feedback" id="answers-feedback" role="status" aria-live="polite"></div></section>` : ''}
+    ${!approved && clarifications.length ? `<section class="clarify"><h2>Optional: a few questions to sharpen the SOP</h2><p class="hint">These are optional — you can approve without them. Any answer is folded into the exact step it belongs to.</p>${questions}<button type="button" onclick="submitAnswers(this)">Save answers</button><div class="feedback" id="answers-feedback" role="status" aria-live="polite"></div></section>` : ''}
     <ol class="steps">${steps}
     </ol>
     ${sop.context.post ? `<div class="notes"><h2>Notes &amp; exceptions</h2><p>${esc(sop.context.post)}</p></div>` : ''}
@@ -109,10 +110,14 @@ function gate(pending) {
     .join('');
 
   return `<section class="gate">
-    <h2>${pending.length} ${pending.length === 1 ? 'claim needs' : 'claims need'} your sign-off</h2>
-    <p class="hint">The recording didn't show any of this — it's background the narrator added from what it
-    knows about this kind of work, and it's the part of the SOP most worth reading and most worth getting
-    wrong. Keep what's right, remove what isn't. This SOP can't be approved until each one is settled.</p>
+    <h2>${pending.length} suggested ${pending.length === 1 ? 'note' : 'notes'} to confirm</h2>
+    <p class="hint">These are notes the narrator added from domain knowledge — why a field matters, how to
+    decide — not things the recording showed. Confirm them in one click, or review each. Approval waits until
+    they're settled.</p>
+    <div class="gate-actions">
+      <button type="button" class="btn-sm keep" onclick="ruleAll(true, this)">Keep all</button>
+      <button type="button" class="btn-sm drop" onclick="ruleAll(false, this)">Remove all</button>
+    </div>
     ${claims}
   </section>`;
 }
@@ -173,14 +178,28 @@ function script(id, pendingCount) {
       const claim = document.getElementById('claim-' + i);
       if (claim.classList.contains('done')) return;
       if (await post('/sops/${id}/guidance', { rulings: [{ gid: claim.dataset.gid, keep }] }, btn)) {
-        claim.classList.add('done');
-        claim.querySelector('.choices').remove();
-        const note = claim.querySelector('.feedback');
-        note.className = 'feedback ok';
-        note.textContent = keep ? 'Kept — it will appear in the SOP.' : 'Removed.';
+        settle(claim, keep);
         pending -= 1;
         refreshGate();
       }
+    }
+    async function ruleAll(keep, btn) {
+      const claims = [...document.querySelectorAll('.claim:not(.done)')];
+      if (!claims.length) return;
+      const rulings = claims.map((c) => ({ gid: c.dataset.gid, keep }));
+      if (await post('/sops/${id}/guidance', { rulings }, btn)) {
+        for (const claim of claims) settle(claim, keep);
+        pending = 0;
+        refreshGate();
+      }
+    }
+    function settle(claim, keep) {
+      claim.classList.add('done');
+      const choices = claim.querySelector('.choices');
+      if (choices) choices.remove();
+      const note = claim.querySelector('.feedback');
+      note.className = 'feedback ok';
+      note.textContent = keep ? 'Kept — it will appear in the SOP.' : 'Removed.';
     }
     async function correct(stepIndex, btn) {
       const box = btn.closest('.correct-body');

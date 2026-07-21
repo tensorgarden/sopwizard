@@ -30,10 +30,19 @@ const css = `
   .sop-row .sub { font-size: 13px; color: var(--muted); margin-top: 1px; }
   .sop-row .links { display: flex; gap: 14px; font-size: 13.5px; white-space: nowrap; }
   .empty { color: var(--muted); background: var(--card); border: 1px dashed var(--line); border-radius: 12px; padding: 22px; text-align: center; }
+  .model-banner { margin: 0 0 28px; padding: 14px 18px; background: var(--amber-soft); border: 1px solid var(--amber-line); border-left: 3px solid var(--amber-line); border-radius: 3px; font-size: 13.5px; line-height: 1.55; color: #5c4a1f; }
+  .model-banner code { font: 12.5px var(--mono); background: #fff; padding: 1px 5px; border-radius: 4px; }
 `;
 
-export function landingPage(sops = []) {
+export function landingPage(sops = [], { basicMode = false } = {}) {
   const approvedCount = sops.filter((s) => s.status === 'approved').length;
+
+  const modelBanner = basicMode
+    ? `<div class="model-banner"><strong>Basic mode — no language model connected.</strong> SOPs will list the
+        recorded steps without phases, prerequisites, decision tables, or guidance. To get the full procedure,
+        set <code>LLM_URL</code> (and <code>LLM_MODEL</code> / <code>LLM_API_KEY</code>) in <code>server/.env</code>
+        — see <code>server/.env.example</code> — then restart.</div>`
+    : '';
 
   const rows = sops.length
     ? sops
@@ -52,6 +61,7 @@ export function landingPage(sops = []) {
 
   const body = `
     ${masthead('Running locally')}
+    ${modelBanner}
     <div class="hero">
       <h1>Do the work once.<br/>Get the SOP forever.</h1>
       <p>Record yourself doing any browser workflow. SOPWizard watches the steps, writes the procedure, asks about anything unclear, and gives you a polished guide your whole team can follow.</p>
