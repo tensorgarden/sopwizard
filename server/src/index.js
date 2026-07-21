@@ -405,6 +405,17 @@ for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
 // so a wedged upload can't strand a connection forever.
 server.requestTimeout = 10 * 60 * 1000;
 
+// A failed bind (usually the port already taken by another SOPWizard window)
+// otherwise throws unhandled and leaves nothing listening — say so plainly.
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    logError(`port ${PORT} is already in use — SOPWizard may already be running in another window`);
+  } else {
+    logError(`server failed to start: ${err.message}`);
+  }
+  process.exit(1);
+});
+
 await migrateLegacyData();
 
 server.listen(PORT, '127.0.0.1', () => {

@@ -4,6 +4,9 @@ const button = document.getElementById('toggle');
 const retryButton = document.getElementById('retry');
 const status = document.getElementById('status');
 const statusText = document.getElementById('statusText');
+const serverBanner = document.getElementById('server');
+
+const HEALTH_URL = 'http://localhost:8787/health';
 
 const MESSAGES = {
   recording: { text: 'Recording your workflow', cls: 'status live' },
@@ -17,14 +20,26 @@ const MESSAGES = {
     cls: 'status warn',
   },
   offline: {
-    text: 'Recording saved, but the SOPWizard server is not reachable at localhost:8787. Start it, then send again.',
+    text: 'Recording saved. Start the SOPWizard app, then click Send last recording — nothing is lost.',
     cls: 'status warn',
   },
   'prev-unsent': {
-    text: 'Your previous recording could not be sent, so it was kept. Start the server and use “Send last recording” before starting a new one.',
+    text: 'Your previous recording was kept. Start the SOPWizard app and use Send last recording before starting a new one.',
     cls: 'status warn',
   },
 };
+
+let serverUp = null; // null = not yet checked
+
+async function checkServer() {
+  try {
+    const res = await fetch(HEALTH_URL, { signal: AbortSignal.timeout(1500), cache: 'no-store' });
+    serverUp = res.ok;
+  } catch {
+    serverUp = false;
+  }
+  return serverUp;
+}
 
 async function state() {
   // Read the counter, not the whole recording — deserializing every base64
@@ -36,6 +51,36 @@ async function state() {
     'eventCount',
   ]);
   return { recording: Boolean(recording), task, preNotes, pending: eventCount };
+}
+
+// The banner that tells you whether the app the recorder sends to is running,
+// before you record rather than after.
+async function renderServer() {
+  const { recording, pending } = await state();
+
+  if (serverUp === null) {
+    serverBanner.hidden = true;
+    return;
+  }
+
+  if (!serverUp) {
+    serverBanner.hidden = false;
+    serverBanner.className = 'server down';
+    serverBanner.textContent = pending
+      ? 'The SOPWizard app isn’t running. Open it (keep its window open), then click Send last recording — your recording is saved.'
+      : 'The SOPWizard app isn’t running. Open it and keep its window open before you record. Anything you record is saved and can be sent once it’s running.';
+    return;
+  }
+
+  // Reachable. Point at the saved recording if there is one; otherwise stay out
+  // of the way.
+  if (pending && !recording) {
+    serverBanner.hidden = false;
+    serverBanner.className = 'server up';
+    serverBanner.textContent = 'The SOPWizard app is running. Click Send last recording to finish your saved SOP.';
+  } else {
+    serverBanner.hidden = true;
+  }
 }
 
 async function render(outcome) {
@@ -50,6 +95,8 @@ async function render(outcome) {
   const unsent = !recording && pending > 0;
   retryButton.hidden = !unsent;
   if (unsent) retryButton.textContent = `Send last recording (${pending} steps)`;
+
+  await renderServer();
 
   // A server-side rejection carries its own reason from the pipeline.
   if (outcome?.status === 'server-error') {
@@ -88,10 +135,15 @@ retryButton.addEventListener('click', async () => {
   statusText.textContent = 'Sending…';
   try {
     const outcome = await chrome.runtime.sendMessage({ kind: 'retry' });
+    await checkServer();
     render(outcome);
   } finally {
     retryButton.disabled = false;
   }
 });
 
+// Check on open, then keep watching while the popup is open, so starting the app
+// updates the banner without reopening the popup.
 render();
+checkServer().then(() => renderServer());
+setInterval(() => checkServer().then(() => renderServer()), 2500);
